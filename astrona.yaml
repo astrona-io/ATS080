@@ -1,9 +1,9 @@
-# Preparation scaffold. Technical pages stay draft until authoring and review.
+# Reading-only content; YAML knowledge checks have a separate index.
 training:
   id: ATS080
   title: 'CNPA: Platform APIs and Provisioning Infrastructure'
-  description: Preparation scaffold for Platform APIs and Provisioning Infrastructure. Lessons and environments
-    are planned.
+  description: 'Detailed reading material and reusable YAML knowledge checks for CNPA: Platform APIs and
+    Provisioning Infrastructure. Technical content remains draft. No labs or playgrounds.'
   certification:
     name: Certified Cloud Native Platform Engineering Associate
     code: CNPA
@@ -18,7 +18,7 @@ training:
 modules:
 - id: module-intro
   title: Introduction
-  description: Planned introduction and authoring status.
+  description: Audience, reading method and review process.
   content:
   - type: reading
     title: Introduction
@@ -34,41 +34,69 @@ modules:
     path: sections/intro/course-03-how-this-course-is-made.md
 - id: module-010
   title: Kubernetes Reconciliation Loop
-  description: Planned coverage of this curriculum objective.
+  description: Developed reading and reasoning for Kubernetes Reconciliation Loop.
+  draft: true
   content:
-  - type: reading
-    title: Section Overview
-    path: sections/section-010/README.md
   - type: reading
     title: Kubernetes Reconciliation Loop
+    path: sections/section-010/README.md
+  - type: reading
+    title: Observe, Compare, Act And Report
     path: sections/section-010/module-01/course.md
+  - type: reading
+    title: Observe, Compare, Act And Report
+    path: sections/section-010/module-01/course-01-observe-compare-act-and-report.md
+  - type: reading
+    title: Summary
+    path: sections/section-010/module-01/course-02-summary.md
 - id: module-020
   title: APIs for Self-Service Platforms (CRDs)
-  description: Planned coverage of this curriculum objective.
+  description: Developed reading and reasoning for APIs for Self-Service Platforms (CRDs).
+  draft: true
   content:
-  - type: reading
-    title: Section Overview
-    path: sections/section-020/README.md
   - type: reading
     title: APIs for Self-Service Platforms (CRDs)
+    path: sections/section-020/README.md
+  - type: reading
+    title: Custom Resource Schemas, Status And Self-Service Contracts
     path: sections/section-020/module-01/course.md
+  - type: reading
+    title: Custom Resource Schemas, Status And Self-Service Contracts
+    path: sections/section-020/module-01/course-01-custom-resource-schemas-status-and-self-service-contracts.md
+  - type: reading
+    title: Summary
+    path: sections/section-020/module-01/course-02-summary.md
 - id: module-030
   title: Infrastructure Provisioning with Kubernetes
-  description: Planned coverage of this curriculum objective.
+  description: Developed reading and reasoning for Infrastructure Provisioning with Kubernetes.
+  draft: true
   content:
-  - type: reading
-    title: Section Overview
-    path: sections/section-030/README.md
   - type: reading
     title: Infrastructure Provisioning with Kubernetes
+    path: sections/section-030/README.md
+  - type: reading
+    title: Infrastructure Claims, Provider Identities And External Lifecycle
     path: sections/section-030/module-01/course.md
+  - type: reading
+    title: Infrastructure Claims, Provider Identities And External Lifecycle
+    path: sections/section-030/module-01/course-01-infrastructure-claims-provider-identities-and-external-lifecycle.md
+  - type: reading
+    title: Summary
+    path: sections/section-030/module-01/course-02-summary.md
 - id: module-040
   title: Kubernetes Operator Pattern for Integration
-  description: Planned coverage of this curriculum objective.
+  description: Developed reading and reasoning for Kubernetes Operator Pattern for Integration.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: Kubernetes Operator Pattern for Integration
     path: sections/section-040/README.md
   - type: reading
-    title: Kubernetes Operator Pattern for Integration
+    title: Domain Controllers, Integration And Repeated Safe Actions
     path: sections/section-040/module-01/course.md
+  - type: reading
+    title: Domain Controllers, Integration And Repeated Safe Actions
+    path: sections/section-040/module-01/course-01-domain-controllers-integration-and-repeated-safe-actions.md
+  - type: reading
+    title: Summary
+    path: sections/section-040/module-01/course-02-summary.md

@@ -1,0 +1,243 @@
+schema_version: 1
+kind: question_bank
+id: ats080-domain-review
+course_id: ATS080
+exam_code: CNPA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: domain
+  id: domain-review
+  title: Platform APIs and Provisioning Infrastructure
+placement:
+  position: after
+  reading: sections/section-040/module-01/course-02-summary.md
+questions:
+- id: ats080-domain-review-q01
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain reconciliation as a feedback-controlled process.
+  source_readings:
+  - sections/section-010/module-01/course-01-observe-compare-act-and-report.md
+  prompt: What sequence best describes reconciliation?
+  options:
+  - id: a
+    text: Observe, compare, act and report, then evaluate again.
+    explanation: It is a feedback process.
+  - id: b
+    text: Execute a historical command list without reading the target.
+    explanation: That is blind procedural repetition.
+  - id: c
+    text: Render a browser page and stop forever.
+    explanation: That does not establish ongoing control.
+  correct_option: a
+  explanation: It is a feedback process.
+- id: ats080-domain-review-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish idempotent progress from repeated blind execution.
+  source_readings:
+  - sections/section-010/module-01/course-01-observe-compare-act-and-report.md
+  prompt: Why does idempotent behavior matter?
+  options:
+  - id: a
+    text: It guarantees every external service is available.
+    explanation: Availability is separate.
+  - id: b
+    text: It means the controller never acts.
+    explanation: It can act when conditions require it.
+  - id: c
+    text: Retries should not create unnecessary duplicate side effects.
+    explanation: Repeated work must remain safe.
+  correct_option: c
+  explanation: Repeated work must remain safe.
+- id: ats080-domain-review-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Identify blocked convergence and actionable status evidence.
+  source_readings:
+  - sections/section-010/module-01/course-01-observe-compare-act-and-report.md
+  prompt: The desired workload cannot start because capacity is absent. What should the controller provide?
+  options:
+  - id: a
+    text: A guarantee that every user request is served.
+    explanation: The workload is not ready.
+  - id: b
+    text: Useful blocked-condition evidence and controlled retry behavior.
+    explanation: Running longer does not create a guarantee of capacity.
+  - id: c
+    text: An invented successful health result.
+    explanation: That would conceal the failure.
+  correct_option: b
+  explanation: Running longer does not create a guarantee of capacity.
+- id: ats080-domain-review-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain a CRD as an API contract rather than an implementation.
+  source_readings:
+  - sections/section-020/module-01/course-01-custom-resource-schemas-status-and-self-service-contracts.md
+  prompt: Does creating a CRD alone provision its described external resource?
+  options:
+  - id: a
+    text: No; an implementation must reconcile the custom resources.
+    explanation: Schema and controller are distinct.
+  - id: b
+    text: Yes; the API server implements every cloud provider automatically.
+    explanation: It does not supply arbitrary provider behavior.
+  - id: c
+    text: Yes; a display title becomes an external database.
+    explanation: Presentation is not provisioning.
+  correct_option: a
+  explanation: Schema and controller are distinct.
+- id: ats080-domain-review-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish desired specification, observed status and reconciliation.
+  source_readings:
+  - sections/section-020/module-01/course-01-custom-resource-schemas-status-and-self-service-contracts.md
+  prompt: What belongs primarily in status?
+  options:
+  - id: a
+    text: An unexplained administrator token for every user.
+    explanation: Secrets need a protected path.
+  - id: b
+    text: The user's desired service class as the only authority.
+    explanation: Intent belongs in the specification contract.
+  - id: c
+    text: Observed conditions and progress for the request.
+    explanation: Status reports implementation results.
+  correct_option: c
+  explanation: Status reports implementation results.
+- id: ats080-domain-review-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Reason about validation, versioning and tenant permissions.
+  source_readings:
+  - sections/section-020/module-01/course-01-custom-resource-schemas-status-and-self-service-contracts.md
+  prompt: Why review custom API versions?
+  options:
+  - id: a
+    text: Every field rename is automatically safe.
+    explanation: Compatibility needs deliberate handling.
+  - id: b
+    text: Consumers and controllers depend on field meaning and compatibility.
+    explanation: Changing a contract can break automation.
+  - id: c
+    text: Versions only change browser spacing.
+    explanation: They concern API semantics.
+  correct_option: b
+  explanation: Changing a contract can break automation.
+- id: ats080-domain-review-q07
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Trace a platform claim through a controller to an external provider.
+  source_readings:
+  - sections/section-030/module-01/course-01-infrastructure-claims-provider-identities-and-external-lifecycle.md
+  prompt: Who performs the external provisioning work?
+  options:
+  - id: a
+    text: A configured controller or provider implementation.
+    explanation: The API declaration requires an interpreter.
+  - id: b
+    text: The YAML file without any consumer.
+    explanation: Text does not call provider APIs itself.
+  - id: c
+    text: The browser title of the claim.
+    explanation: Presentation is not execution.
+  correct_option: a
+  explanation: The API declaration requires an interpreter.
+- id: ats080-domain-review-q08
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain provider credentials, readiness and connection delivery.
+  source_readings:
+  - sections/section-030/module-01/course-01-infrastructure-claims-provider-identities-and-external-lifecycle.md
+  prompt: Why limit provider identity authority?
+  options:
+  - id: a
+    text: Every claim creator should be a cloud administrator.
+    explanation: That grants unnecessary authority.
+  - id: b
+    text: Provider credentials only affect CSS.
+    explanation: They authorize real operations.
+  - id: c
+    text: The controller acts on user intent and should not expose unrelated capabilities.
+    explanation: An abstraction can otherwise become a privilege path.
+  correct_option: c
+  explanation: An abstraction can otherwise become a privilege path.
+- id: ats080-domain-review-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Reason about retention, deletion and partial failures.
+  source_readings:
+  - sections/section-030/module-01/course-01-infrastructure-claims-provider-identities-and-external-lifecycle.md
+  prompt: What should deletion policy address for a database?
+  options:
+  - id: a
+    text: A guarantee that deletion creates a backup automatically.
+    explanation: Backup requires a separate contract.
+  - id: b
+    text: Whether data and infrastructure are retained, deleted or handed off.
+    explanation: Persistent lifecycle has consequences.
+  - id: c
+    text: Only whether the descriptor filename is short.
+    explanation: Filename length does not protect data.
+  correct_option: b
+  explanation: Persistent lifecycle has consequences.
+- id: ats080-domain-review-q10
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain the operator pattern as domain-specific control.
+  source_readings:
+  - sections/section-040/module-01/course-01-domain-controllers-integration-and-repeated-safe-actions.md
+  prompt: What distinguishes an operator's role?
+  options:
+  - id: a
+    text: It embeds domain-specific management behavior in a controller.
+    explanation: It interprets and manages a particular capability.
+  - id: b
+    text: It is only a custom resource name.
+    explanation: A name does not implement behavior.
+  - id: c
+    text: It replaces every Kubernetes controller.
+    explanation: Other controllers keep their responsibilities.
+  correct_option: a
+  explanation: It interprets and manages a particular capability.
+- id: ats080-domain-review-q11
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish API schema, controller code and external dependencies.
+  source_readings:
+  - sections/section-040/module-01/course-01-domain-controllers-integration-and-repeated-safe-actions.md
+  prompt: What does a CRD provide without controller code?
+  options:
+  - id: a
+    text: A complete external provider integration automatically.
+    explanation: Provider work needs code and credentials.
+  - id: b
+    text: Every possible business recovery action.
+    explanation: Recovery is domain-specific.
+  - id: c
+    text: An API kind and schema contract.
+    explanation: It does not supply arbitrary domain implementation.
+  correct_option: c
+  explanation: It does not supply arbitrary domain implementation.
+- id: ats080-domain-review-q12
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Reason about permissions, lifecycle and upgrade compatibility.
+  source_readings:
+  - sections/section-040/module-01/course-01-domain-controllers-integration-and-repeated-safe-actions.md
+  prompt: Why assess operator upgrades carefully?
+  options:
+  - id: a
+    text: Every upgrade automatically preserves all data.
+    explanation: Data lifecycle must be reviewed.
+  - id: b
+    text: They can affect schemas, defaults and managed resource lifecycle.
+    explanation: Compatibility reaches beyond the image version.
+  - id: c
+    text: Upgrades only change logo colors.
+    explanation: They can change operational behavior.
+  correct_option: b
+  explanation: Compatibility reaches beyond the image version.
