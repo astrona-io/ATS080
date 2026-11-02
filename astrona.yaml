@@ -35,7 +35,7 @@ modules:
 - id: module-010
   title: Kubernetes Reconciliation Loop
   description: Developed reading and reasoning for Kubernetes Reconciliation Loop.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: Kubernetes Reconciliation Loop
@@ -52,7 +52,7 @@ modules:
 - id: module-020
   title: APIs for Self-Service Platforms (CRDs)
   description: Developed reading and reasoning for APIs for Self-Service Platforms (CRDs).
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: APIs for Self-Service Platforms (CRDs)
@@ -69,7 +69,7 @@ modules:
 - id: module-030
   title: Infrastructure Provisioning with Kubernetes
   description: Developed reading and reasoning for Infrastructure Provisioning with Kubernetes.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: Infrastructure Provisioning with Kubernetes
@@ -86,7 +86,7 @@ modules:
 - id: module-040
   title: Kubernetes Operator Pattern for Integration
   description: Developed reading and reasoning for Kubernetes Operator Pattern for Integration.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: Kubernetes Operator Pattern for Integration
