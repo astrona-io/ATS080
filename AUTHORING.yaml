@@ -1,0 +1,99 @@
+version: 1
+approval: CNPA requested 2026-10-11; established reading-only scope
+course:
+  id: ATS080
+  certification:
+    name: Certified Cloud Native Platform Engineering Associate
+    code: CNPA
+    provider: CNCF / Linux Foundation
+    domain: Platform APIs and Provisioning Infrastructure
+    weight: 12
+    competencies:
+    - Kubernetes Reconciliation Loop
+    - APIs for Self-Service Platforms (CRDs)
+    - Infrastructure Provisioning with Kubernetes
+    - Kubernetes Operator Pattern for Integration
+defaults:
+  playground: false
+  module_lab: false
+  capstone: false
+  section_quiz: false
+  final_quiz: true
+assessment_format: YAML question banks v1, registered in assessments/index.yaml
+sections:
+- id: section-010
+  title: Kubernetes Reconciliation Loop
+  curriculum_item: Kubernetes Reconciliation Loop
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Observe, Compare, Act And Report
+    objectives:
+    - Explain reconciliation as a feedback-controlled process.
+    - Distinguish idempotent progress from repeated blind execution.
+    - Identify blocked convergence and actionable status evidence.
+    outline:
+    - Observe, Compare, Act And Report
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-010/module-01/course-01-observe-compare-act-and-report.md
+      adapted_from: ATS064/sections/section-050/module-01/course-01-observe-compare-act-and-report.md
+- id: section-020
+  title: APIs for Self-Service Platforms (CRDs)
+  curriculum_item: APIs for Self-Service Platforms (CRDs)
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Custom Resource Schemas, Status And Self-Service Contracts
+    objectives:
+    - Explain a CRD as an API contract rather than an implementation.
+    - Distinguish desired specification, observed status and reconciliation.
+    - Reason about validation, versioning and tenant permissions.
+    outline:
+    - Custom Resource Schemas, Status And Self-Service Contracts
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-020/module-01/course-01-custom-resource-schemas-status-and-self-service-contracts.md
+      adapted_from: null
+- id: section-030
+  title: Infrastructure Provisioning with Kubernetes
+  curriculum_item: Infrastructure Provisioning with Kubernetes
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Infrastructure Claims, Provider Identities And External Lifecycle
+    objectives:
+    - Trace a platform claim through a controller to an external provider.
+    - Explain provider credentials, readiness and connection delivery.
+    - Reason about retention, deletion and partial failures.
+    outline:
+    - Infrastructure Claims, Provider Identities And External Lifecycle
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-030/module-01/course-01-infrastructure-claims-provider-identities-and-external-lifecycle.md
+      adapted_from: null
+- id: section-040
+  title: Kubernetes Operator Pattern for Integration
+  curriculum_item: Kubernetes Operator Pattern for Integration
+  capstone: false
+  section_quiz: false
+  modules:
+  - id: module-01
+    title: Domain Controllers, Integration And Repeated Safe Actions
+    objectives:
+    - Explain the operator pattern as domain-specific control.
+    - Distinguish API schema, controller code and external dependencies.
+    - Reason about permissions, lifecycle and upgrade compatibility.
+    outline:
+    - Domain Controllers, Integration And Repeated Safe Actions
+    playground: false
+    module_lab: false
+    sources:
+    - reading: sections/section-040/module-01/course-01-domain-controllers-integration-and-repeated-safe-actions.md
+      adapted_from: null

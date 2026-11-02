@@ -1,18 +1,18 @@
-# ATS080 — CNPA: Platform APIs and Provisioning Infrastructure
+# Platform APIs and Provisioning Infrastructure (ATS080)
 
-Preparation for the **Platform APIs and Provisioning Infrastructure** domain of **Certified Cloud Native Platform Engineering Associate (CNPA)**.
-The published domain weight is **12%**. This repository belongs to
-the [ATP016 training path](https://github.com/astrona-io/ATP016).
+Certified Cloud Native Platform Engineering Associate (CNPA): Platform APIs and Provisioning Infrastructure, worth 12% of the official curriculum. This course belongs to ATP016.
 
-**Status:** Preparation scaffold; content authoring has not started.
+Developed reading explains mechanisms, responsible components, examples and limits. Every section has an introduction and every module closes with a summary. Reusable YAML checks contain 5–15 questions per bank. Technical content remains draft. No labs or playgrounds are included.
 
-The initial commit reserves the curriculum structure. Lessons, playgrounds,
-labs and assessments are planned and are not ready for learner use.
+## Course Outline
 
-See [CURRICULUM.md](CURRICULUM.md) for the objective map and authoring checklist,
-[astrona.yaml](astrona.yaml) for the course manifest, and
-[CLAUDE.md](CLAUDE.md) for writing and environment rules.
+| Section / module | Module | Teaching files |
+| --- | --- | --- |
+| 010 / 01 | Observe, Compare, Act And Report | Observe, Compare, Act And Report |
+| 020 / 01 | Custom Resource Schemas, Status And Self-Service Contracts | Custom Resource Schemas, Status And Self-Service Contracts |
+| 030 / 01 | Infrastructure Claims, Provider Identities And External Lifecycle | Infrastructure Claims, Provider Identities And External Lifecycle |
+| 040 / 01 | Domain Controllers, Integration And Repeated Safe Actions | Domain Controllers, Integration And Repeated Safe Actions |
 
-Curriculum source: [official CNPA page](https://training.linuxfoundation.org/certification/certified-cloud-native-platform-engineering-associate-cnpa/), checked 2026-10-10.
-License: [Apache-2.0](LICENSE). Curriculum objectives retain attribution to
-The Linux Foundation and CNCF; see [CNCF curriculum licensing](https://github.com/cncf/curriculum).
+## Author Review
+
+See [curriculum coverage](CURRICULUM.md), [primary sources](SOURCES.md), [question-bank documentation](ASSESSMENTS.md) and [contribution instructions](CONTRIBUTING.md). No runtime execution is claimed.
