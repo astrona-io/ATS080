@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Capstone: A Complete Self-Service API (CRD, rules, status and tenant access). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-capstone-020
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+
+# Starting state: the namespaces starfleet (labeled platform.example/prod-allowed=true)
+# and outpost (no label). No CRD, no Role and no policy.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Create the namespaces starfleet and outpost
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: crd-shape
+      description: The Environment CRD is namespaced, has the single version v1alpha1, the status subresource and the printer columns Tier, Owner and Phase
+      type: file
+      source: validation/validate-crd-shape.sh
+      hint: The CRD name must be environments.platform.example. Use scope Namespaced, one version v1alpha1 with served and storage true, subresources.status, and additionalPrinterColumns with Tier (.spec.tier), Owner (.spec.owner), Phase (.status.phase) and Age.
+    - name: schema-defaults
+      description: Defaults are applied and invalid values are rejected by the schema
+      type: file
+      source: validation/validate-schema-defaults.sh
+      hint: Require tier and owner. Limit tier to dev, staging and prod, owner to a pattern, replicas to 1-10 with default 1, region to eu-north and eu-west with default eu-north, ttlDays to 1-90 with default 14. Check with kubectl apply --dry-run=server.
+    - name: cel-rules
+      description: Tier prod requires at least 2 replicas and the owner cannot change after creation
+      type: file
+      source: validation/validate-cel-rules.sh
+      hint: Put the cross-field rule on spec with fieldPath .replicas. Put "self == oldSelf" on spec.owner. Transition rules run only on update.
+    - name: status-subresource
+      description: Status is written only through the status subresource and conditions are validated
+      type: file
+      source: validation/validate-status-subresource.sh
+      hint: Add subresources.status to the version, and a status schema with phase, observedGeneration and conditions whose status is an enum of "True", "False" and "Unknown". Test with kubectl patch --subresource=status.
+    - name: tenant-rbac
+      description: Each team manages environments in its own namespace, auditors read, nobody writes status, and no wildcard or ClusterRoleBinding is used
+      type: file
+      source: validation/validate-tenant-rbac.sh
+      hint: Create Roles and RoleBindings in starfleet and in outpost. Editors get create, get, list, watch, update, patch and delete on environments. Auditors get get, list and watch. Do not grant environments/status.
+    - name: prod-policy
+      description: A ValidatingAdmissionPolicy with a Deny binding allows tier prod only in namespaces labeled platform.example/prod-allowed=true
+      type: file
+      source: validation/validate-prod-policy.sh
+      hint: Write a policy on environments with a CEL expression that reads namespaceObject.metadata.labels, and a ValidatingAdmissionPolicyBinding with validationActions Deny.
+
+teardown:
+  keepCluster: false

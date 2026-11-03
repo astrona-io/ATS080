@@ -1,0 +1,12 @@
+# Two tenant namespaces. starfleet may hold production claims, outpost may not.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+  labels:
+    platform.example/prod-allowed: "true"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost

@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: drifter-cert
+  namespace: outpost
+spec:
+  secretName: drifter-tls
+  dnsNames:
+    - drifter.outpost.svc
+  issuerRef:
+    name: outpost-issuer
+    kind: Issuer
+    group: cert-manager.io

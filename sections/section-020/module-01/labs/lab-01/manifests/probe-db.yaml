@@ -1,0 +1,12 @@
+# An existing claim that the tightened schema must keep accepting.
+apiVersion: platform.example/v1alpha1
+kind: DatabaseClaim
+metadata:
+  name: probe-db
+  namespace: starfleet
+spec:
+  engine: postgres
+  version: "16"
+  storageGB: 20
+  environment: dev
+  highAvailability: false

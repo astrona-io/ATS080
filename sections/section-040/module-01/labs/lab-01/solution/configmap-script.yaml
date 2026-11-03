@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: beacon-operator-script
+  namespace: beacon-system
+data:
+  reconcile.sh: |
+    #!/usr/bin/env bash
+    # Reconcile loop for Beacon resources: child ConfigMap, status, registry entry and finalizer.
+    set -u
+    WATCH_NAMESPACE="${WATCH_NAMESPACE:-starfleet}"
+    REGISTRY_NAMESPACE="${REGISTRY_NAMESPACE:-beacon-registry}"
+    INTERVAL="${INTERVAL:-5}"
+    FINALIZER="ops.starfleet.example/registry-cleanup"
+    
+    log() { echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
+    
+    # ensure_child applies the child ConfigMap. The ownerReference makes the
+    # Kubernetes garbage collector delete the ConfigMap when the Beacon is deleted.
+    ensure_child() {
+      local name="$1" uid="$2" message="$3" channel="$4"
+      jq -n --arg ns "$WATCH_NAMESPACE" --arg name "$name" --arg uid "$uid" --arg message "$message" --arg channel "$channel" '{
+        apiVersion: "v1",
+        kind: "ConfigMap",
+        metadata: {
+          name: ("beacon-" + $name),
+          namespace: $ns,
+          labels: {"app.kubernetes.io/managed-by": "beacon-operator"},
+          ownerReferences: [{
+            apiVersion: "ops.starfleet.example/v1",
+            kind: "Beacon",
+            name: $name,
+            uid: $uid,
+            controller: true,
+            blockOwnerDeletion: true
+          }]
+        },
+        data: {message: $message, channel: $channel}
+      }' | kubectl apply -f - >/dev/null
+    }
+    
+    # ensure_registry_entry creates the registry entry only when it is missing.
+    # The entry lives in another namespace, so an ownerReference cannot cover it.
+    ensure_registry_entry() {
+      local name="$1" uid="$2" entry="${WATCH_NAMESPACE}-$1"
+      if kubectl -n "$REGISTRY_NAMESPACE" get configmap "$entry" >/dev/null 2>&1; then
+        return 0
+      fi
+      jq -n --arg ns "$REGISTRY_NAMESPACE" --arg entry "$entry" --arg beacon "$WATCH_NAMESPACE/$name" --arg uid "$uid" '{
+        apiVersion: "v1",
+        kind: "ConfigMap",
+        metadata: {name: $entry, namespace: $ns, labels: {"app.kubernetes.io/managed-by": "beacon-operator"}},
+        data: {beacon: $beacon, uid: $uid}
+      }' | kubectl create -f - >/dev/null
+    }
+    
+    remove_registry_entry() {
+      kubectl -n "$REGISTRY_NAMESPACE" delete configmap "${WATCH_NAMESPACE}-$1" --ignore-not-found >/dev/null
+    }
+    
+    # add_finalizer and remove_finalizer keep every other finalizer on the object.
+    add_finalizer() {
+      local name="$1" json="$2"
+      kubectl -n "$WATCH_NAMESPACE" patch beacon "$name" --type=merge \
+        -p "$(jq -c --arg f "$FINALIZER" '{metadata: {finalizers: (((.metadata.finalizers // []) + [$f]) | unique)}}' <<<"$json")" >/dev/null
+    }
+    
+    remove_finalizer() {
+      local name="$1" json="$2"
+      kubectl -n "$WATCH_NAMESPACE" patch beacon "$name" --type=merge \
+        -p "$(jq -c --arg f "$FINALIZER" '{metadata: {finalizers: ((.metadata.finalizers // []) - [$f])}}' <<<"$json")" >/dev/null
+    }
+    
+    update_status() {
+      local name="$1" generation="$2" observed="$3" phase="$4"
+      if [ "$observed" = "$generation" ] && [ "$phase" = "Ready" ]; then
+        return 0
+      fi
+      kubectl -n "$WATCH_NAMESPACE" patch beacon "$name" --subresource=status --type=merge \
+        -p "$(jq -nc --argjson generation "$generation" --arg configmap "beacon-$name" \
+          '{status: {phase: "Ready", observedGeneration: $generation, configMapName: $configmap}}')" >/dev/null
+    }
+    
+    reconcile() {
+      local name="$1" json uid message channel generation observed phase deleting has_finalizer
+      json="$(kubectl -n "$WATCH_NAMESPACE" get beacon "$name" -o json 2>/dev/null)" || return 0
+      uid="$(jq -r '.metadata.uid' <<<"$json")"
+      deleting="$(jq -r '.metadata.deletionTimestamp // ""' <<<"$json")"
+      has_finalizer="$(jq -r --arg f "$FINALIZER" '((.metadata.finalizers // []) | index($f)) != null' <<<"$json")"
+    
+      if [ -n "$deleting" ]; then
+        if [ "$has_finalizer" = "true" ]; then
+          if remove_registry_entry "$name"; then
+            remove_finalizer "$name" "$json" && log "cleaned up $name"
+          else
+            log "error: cannot remove registry entry for $name, keeping finalizer"
+          fi
+        fi
+        return 0
+      fi
+    
+      if [ "$has_finalizer" != "true" ]; then
+        add_finalizer "$name" "$json" || { log "error: cannot add finalizer to $name"; return 1; }
+      fi
+    
+      message="$(jq -r '.spec.message' <<<"$json")"
+      channel="$(jq -r '.spec.channel // "routine"' <<<"$json")"
+      generation="$(jq -r '.metadata.generation' <<<"$json")"
+      observed="$(jq -r '.status.observedGeneration // 0' <<<"$json")"
+      phase="$(jq -r '.status.phase // ""' <<<"$json")"
+    
+      ensure_registry_entry "$name" "$uid" || { log "error: cannot create registry entry for $name"; return 1; }
+      ensure_child "$name" "$uid" "$message" "$channel" || { log "error: cannot ensure child for $name"; return 1; }
+      update_status "$name" "$generation" "$observed" "$phase" || log "error: cannot update status for $name"
+    }
+    
+    log "beacon-operator starting, namespace=$WATCH_NAMESPACE interval=${INTERVAL}s"
+    while true; do
+      for name in $(kubectl -n "$WATCH_NAMESPACE" get beacons -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+        reconcile "$name"
+      done
+      sleep "$INTERVAL"
+    done

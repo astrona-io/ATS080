@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Complete The Beacon Operator (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-lab-040-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - alpine/k8s:1.35.8
+
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: "Install the Beacon CRD, the starter operator and two Beacon resources"
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: child-owned-by-beacon
+      description: Each child ConfigMap carries an ownerReference to its Beacon
+      type: file
+      source: validation/validate-child-owned-by-beacon.sh
+      hint: Add ownerReferences to the ConfigMap the operator applies. It needs apiVersion, kind, name and the uid of the Beacon, and controller set to true.
+    - name: status-follows-spec
+      description: The operator writes status and keeps observedGeneration equal to generation after a change
+      type: file
+      source: validation/validate-status-follows-spec.sh
+      hint: Patch the status subresource with --subresource=status. The Role needs the beacons/status resource with the patch verb.
+    - name: finalizer-cleans-registry
+      description: Deleting a Beacon removes its registry entry and the Beacon itself
+      type: file
+      source: validation/validate-finalizer-cleans-registry.sh
+      hint: Add a finalizer, create the registry entry in beacon-registry, and remove the entry and then the finalizer when deletionTimestamp is set. Grant a Role in beacon-registry.
+    - name: restart-is-idempotent
+      description: Restarting the operator does not recreate or duplicate any object
+      type: file
+      source: validation/validate-restart-is-idempotent.sh
+      hint: Apply the same manifest every time and create the registry entry only when it is missing. Restart the pod with kubectl rollout restart after you change the script.
+    - name: least-privilege
+      description: The operator service account has only the access it needs
+      type: file
+      source: validation/validate-least-privilege.sh
+      hint: Keep Roles per namespace. Do not grant delete on ConfigMaps in starfleet (the garbage collector does that), and nothing on Secrets.
+
+teardown:
+  keepCluster: false

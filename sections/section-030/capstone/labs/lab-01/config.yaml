@@ -1,0 +1,73 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Infrastructure Provisioning with Kubernetes Capstone (LAB): build a complete claim API
+# with a composition, a connection secret and deletion behavior. Graded against the live cluster. Built untested.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-capstone-030
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - ghcr.io/stefanprodan/podinfo:6.15.0
+      - curlimages/curl:8.22.0
+
+# Starting state: Crossplane, provider-kubernetes (bound to cluster-admin),
+# function-patch-and-transform and a ProviderConfig named local-cluster.
+# There is no XRD, Composition or claim.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Install Crossplane, the provider and the function
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference XRD, Composition and claims, then delete probe-depot
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: claim-api
+      description: The XRD defines the claim Depot with replicas limited to 1 to 3
+      type: file
+      source: validation/validate-claim-api.sh
+      hint: The XRD xdepots.platform.starfleet.example needs kind XDepot, claimNames kind Depot, version v1alpha1 and a replicas integer with minimum 1 and maximum 3. It must be Established.
+    - name: composition-pipeline
+      description: The Composition depot-kubernetes is a pipeline that uses function-patch-and-transform
+      type: file
+      source: validation/validate-composition-pipeline.sh
+      hint: compositeTypeRef must name XDepot. Use mode Pipeline and the function function-patch-and-transform.
+    - name: scout-depot-ready
+      description: The claim scout-depot is Ready with a namespace and 2 available replicas
+      type: file
+      source: validation/validate-scout-depot-ready.sh
+      hint: The namespace is depot-scout-depot and the Deployment is named scout. Read the conditions of the claim and of the Objects to see what is missing.
+    - name: connection-secret
+      description: The Secret depot-conn in starfleet holds the key endpoint
+      type: file
+      source: validation/validate-connection-secret.sh
+      hint: Add connectionSecretKeys to the XRD, writeConnectionSecretsToNamespace to the Composition, and writeConnectionSecretToRef to the claim. The value comes from the record ConfigMap through connectionDetails on the Object.
+    - name: record-kept-after-delete
+      description: probe-depot is deleted, its namespace is gone, and record-probe-depot is still in starfleet-records
+      type: file
+      source: validation/validate-record-kept-after-delete.sh
+      hint: Set deletionPolicy Orphan on the record Object in the Composition, wait until probe-depot has it, then delete the claim probe-depot.
+    - name: claim-bounds-enforced
+      description: The API server rejects a Depot with replicas 5
+      type: file
+      source: validation/validate-claim-bounds-enforced.sh
+      hint: The bounds come from minimum and maximum in the XRD schema. Check with kubectl apply --dry-run=server.
+
+teardown:
+  keepCluster: false

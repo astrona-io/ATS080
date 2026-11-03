@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Versions, Status Contracts And Tenant Access (PLAYGROUND) - playground environment.
+# A clean sandbox: two namespaces and the DatabaseClaim CRD with two versions
+# (v1alpha1 is the storage version). No claims, no Roles, no policy. No task,
+# no grading, no `astrona submit`.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-playground-020-02
+  docs:
+    guide: docs/overview.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+
+bootstrap:
+  manifests:
+    - name: namespaces
+      type: file
+      source: manifests/namespaces.yaml
+    - name: databaseclaim-crd
+      type: file
+      source: manifests/crd.yaml
+
+teardown:
+  keepCluster: false

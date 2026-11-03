@@ -1,0 +1,17 @@
+apiVersion: ops.starfleet.example/v1
+kind: Beacon
+metadata:
+  name: scout
+  namespace: starfleet
+spec:
+  message: "scout online"
+  channel: routine
+---
+apiVersion: ops.starfleet.example/v1
+kind: Beacon
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  message: "probe online"
+  channel: alert

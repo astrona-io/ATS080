@@ -203,20 +203,20 @@ The course covers **Platform APIs and Provisioning Infrastructure**, worth **12%
 **Certified Cloud Native Platform Engineering Associate (CNPA)**. It is part of **ATP016**.
 The official objectives are listed in `astrona.yaml` and mapped in `CURRICULUM.md`.
 
-### Reading-only scope
+### Hands-on scope
 
-The maintainer approved the lesson plan, asked for deeper teaching, and explicitly
-requested **no labs or playgrounds**. That instruction overrides shared examples
-about hands-on environments, graded labs and playground markers. Do not create
-runtime configurations, executable exercises or playground lifecycle markers.
-The course must be usable without a cluster or installed command-line tools.
+The maintainer first requested a reading-only course and later lifted that limit
+(2026-11-03). Labs, playgrounds, capstones and `quiz.yaml` files are now in scope and
+follow the shared rules above. Labs and playgrounds are built from static checks only
+(`astrona validate -c`, `bash -n`, YAML parsing). They are UNTESTED until a maintainer
+runs them. Existing readings and the older question banks under `assessments/` stay.
 
 ### Teaching structure and depth
 
 Every section begins with its own introduction and measurable learning outcomes.
 Every module contains a landing page, developed teaching lessons and a final
 `# Summary` page. Put the summary after all its lessons and before the next
-module. This reading-only summary has no playground destruction marker.
+module. The summary ends with `<!-- astrona:playground:destroy -->`.
 
 Explain mechanisms, responsible components, realistic examples and the limits
 of each claim. Include worked reasoning and relevant failure cases. Avoid thin
@@ -248,4 +248,4 @@ The ATP registration remains draft until publication is approved.
 Primary author sources are recorded in `SOURCES.md`. The objective list was
 verified on 2026-10-11. Detailed reading expansions were written on 2026-10-11.
 Validate manifest paths, summary ordering, curriculum coverage and question
-contracts. Do not claim runtime verification for a reading-only course.
+contracts. Do not claim runtime verification: labs and playgrounds are untested.

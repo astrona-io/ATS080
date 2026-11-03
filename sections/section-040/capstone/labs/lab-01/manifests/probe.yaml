@@ -1,0 +1,76 @@
+# The broken integration: a workload, a Certificate and an over-privileged
+# service account. The Certificate refers to a ClusterIssuer that does not exist.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: probe
+  namespace: starfleet
+---
+# Too much power: cluster-admin for a workload that only serves HTTP.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: probe-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: probe
+    namespace: starfleet
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: probe-cert
+  namespace: starfleet
+spec:
+  secretName: probe-tls
+  dnsNames:
+    - probe.starfleet.svc
+  issuerRef:
+    name: starfleet-ca
+    kind: ClusterIssuer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: probe
+  template:
+    metadata:
+      labels:
+        app: probe
+    spec:
+      serviceAccountName: probe
+      containers:
+        - name: probe
+          image: ghcr.io/stefanprodan/podinfo:6.15.0
+          ports:
+            - containerPort: 9898
+          volumeMounts:
+            - name: tls
+              mountPath: /etc/probe/tls
+              readOnly: true
+      volumes:
+        - name: tls
+          secret:
+            secretName: probe-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  selector:
+    app: probe
+  ports:
+    - port: 9898
+      targetPort: 9898

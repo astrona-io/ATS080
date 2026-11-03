@@ -1,0 +1,255 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: databaseclaims.platform.example
+spec:
+  group: platform.example
+  scope: Namespaced
+  names:
+    kind: DatabaseClaim
+    listKind: DatabaseClaimList
+    plural: databaseclaims
+    singular: databaseclaim
+    shortNames:
+      - dbc
+  conversion:
+    strategy: None
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Engine
+          type: string
+          jsonPath: .spec.engine
+        - name: Environment
+          type: string
+          jsonPath: .spec.environment
+        - name: Storage
+          type: integer
+          jsonPath: .spec.storageGB
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              description: The database a team asks for.
+              required:
+                - engine
+              properties:
+                engine:
+                  type: string
+                  description: Database engine. The platform offers postgres and mysql. Cannot be changed after creation.
+                  enum:
+                    - postgres
+                    - mysql
+                  x-kubernetes-validations:
+                    - rule: "self == oldSelf"
+                      message: "engine cannot change after the claim is created"
+                version:
+                  type: string
+                  description: Major version of the engine, for example "16".
+                  maxLength: 16
+                storageGB:
+                  type: integer
+                  description: Size of the volume in gibibytes. Can grow but never shrink.
+                  minimum: 1
+                  maximum: 500
+                  default: 10
+                  x-kubernetes-validations:
+                    - rule: "self >= oldSelf"
+                      message: "storageGB can grow but never shrink"
+                environment:
+                  type: string
+                  description: Where the database runs.
+                  enum:
+                    - dev
+                    - staging
+                    - prod
+                  default: dev
+                highAvailability:
+                  type: boolean
+                  description: Run a standby replica. Required when environment is prod.
+                  default: false
+              x-kubernetes-validations:
+                - rule: "self.environment != 'prod' || self.highAvailability"
+                  message: "environment prod requires highAvailability: true"
+                  reason: FieldValueInvalid
+                  fieldPath: ".highAvailability"
+            status:
+              type: object
+              description: Observed state, written by the platform controller.
+              properties:
+                phase:
+                  type: string
+                  description: Summary of the lifecycle, for example Pending or Ready.
+                observedGeneration:
+                  type: integer
+                  format: int64
+                  description: The metadata.generation that the controller last processed.
+                connectionSecretName:
+                  type: string
+                  description: Name of the Secret that holds the connection details.
+                conditions:
+                  type: array
+                  description: Detailed state, one entry for each condition type.
+                  x-kubernetes-list-type: map
+                  x-kubernetes-list-map-keys:
+                    - type
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                        maxLength: 316
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                      reason:
+                        type: string
+                        maxLength: 1024
+                      message:
+                        type: string
+                        maxLength: 32768
+                      observedGeneration:
+                        type: integer
+                        format: int64
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+    - name: v1beta1
+      served: true
+      storage: false
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Engine
+          type: string
+          jsonPath: .spec.engine
+        - name: Environment
+          type: string
+          jsonPath: .spec.environment
+        - name: Storage
+          type: integer
+          jsonPath: .spec.storageGB
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              description: The database a team asks for.
+              required:
+                - engine
+              properties:
+                engine:
+                  type: string
+                  description: Database engine. The platform offers postgres and mysql. Cannot be changed after creation.
+                  enum:
+                    - postgres
+                    - mysql
+                  x-kubernetes-validations:
+                    - rule: "self == oldSelf"
+                      message: "engine cannot change after the claim is created"
+                version:
+                  type: string
+                  description: Major version of the engine, for example "16".
+                  maxLength: 16
+                storageGB:
+                  type: integer
+                  description: Size of the volume in gibibytes. Can grow but never shrink.
+                  minimum: 1
+                  maximum: 500
+                  default: 10
+                  x-kubernetes-validations:
+                    - rule: "self >= oldSelf"
+                      message: "storageGB can grow but never shrink"
+                environment:
+                  type: string
+                  description: Where the database runs.
+                  enum:
+                    - dev
+                    - staging
+                    - prod
+                  default: dev
+                highAvailability:
+                  type: boolean
+                  description: Run a standby replica. Required when environment is prod.
+                  default: false
+              x-kubernetes-validations:
+                - rule: "self.environment != 'prod' || self.highAvailability"
+                  message: "environment prod requires highAvailability: true"
+                  reason: FieldValueInvalid
+                  fieldPath: ".highAvailability"
+            status:
+              type: object
+              description: Observed state, written by the platform controller.
+              properties:
+                phase:
+                  type: string
+                  description: Summary of the lifecycle, for example Pending or Ready.
+                observedGeneration:
+                  type: integer
+                  format: int64
+                  description: The metadata.generation that the controller last processed.
+                connectionSecretName:
+                  type: string
+                  description: Name of the Secret that holds the connection details.
+                conditions:
+                  type: array
+                  description: Detailed state, one entry for each condition type.
+                  x-kubernetes-list-type: map
+                  x-kubernetes-list-map-keys:
+                    - type
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                        maxLength: 316
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                      reason:
+                        type: string
+                        maxLength: 1024
+                      message:
+                        type: string
+                        maxLength: 32768
+                      observedGeneration:
+                        type: integer
+                        format: int64
+                      lastTransitionTime:
+                        type: string
+                        format: date-time

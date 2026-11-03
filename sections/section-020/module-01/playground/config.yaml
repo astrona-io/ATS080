@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# CRD Schemas And Validation (PLAYGROUND) - playground environment.
+# A clean sandbox: two namespaces and no CRD. No task, no grading, no
+# `astrona submit`.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-playground-020-01
+  docs:
+    guide: docs/overview.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+
+bootstrap:
+  manifests:
+    - name: namespaces
+      type: file
+      source: manifests/namespaces.yaml
+
+teardown:
+  keepCluster: false

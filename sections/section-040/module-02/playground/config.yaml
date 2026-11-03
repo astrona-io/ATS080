@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Operating A Real Operator: cert-manager (PLAYGROUND) — playground environment.
+# A clean sandbox: cert-manager v1.21.3 installed and ready. No Issuer, no Certificate.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-playground-040-02
+  docs:
+    guide: docs/overview.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/jetstack/cert-manager-controller:v1.21.3
+      - quay.io/jetstack/cert-manager-cainjector:v1.21.3
+      - quay.io/jetstack/cert-manager-webhook:v1.21.3
+      - ghcr.io/stefanprodan/podinfo:6.15.0
+
+bootstrap:
+  init:
+    - name: prepare
+      description: "Install cert-manager v1.21.3 and create the namespaces starfleet and outpost"
+      type: file
+      source: bootstrap/prepare.sh
+
+teardown:
+  keepCluster: false

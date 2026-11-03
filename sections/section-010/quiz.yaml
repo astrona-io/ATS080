@@ -1,0 +1,279 @@
+# Knowledge check for section 010. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats080-010
+course_id: ATS080
+exam_code: CNPA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-010
+  title: "Kubernetes Reconciliation Loop"
+questions:
+  - id: ats080-010-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Describe the four steps of a controller loop"
+    source_readings:
+      - sections/section-010/module-01/course-01-spec-status-and-the-control-loop.md
+    prompt: |-
+      A controller for a Deployment wakes up. Which order of work describes one pass of its loop?
+    options:
+      - id: a
+        text: "Act, then observe, then compare, then report."
+        explanation: "The controller cannot act before it knows the live state and the gap to the desired state."
+      - id: b
+        text: "Observe the live state, compare it with `spec`, act on the difference, then report in `status`."
+        explanation: "Correct. Observing and comparing come first, the action closes the gap, and the report tells others what the controller saw."
+      - id: c
+        text: "Compare `status` with `status`, then delete the object and create it again."
+        explanation: "The loop compares live state with `spec`, and it changes only what differs. It does not delete and re-create the object."
+      - id: d
+        text: "Report in `spec`, then observe, then wait for a person to approve the action."
+        explanation: "`spec` is written by users. Controllers write `status`, and they act without waiting for approval."
+    correct_option: b
+    explanation: "One pass observes the live state, compares it with `spec`, acts on the difference and reports in `status`."
+
+  - id: ats080-010-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use generation and observedGeneration to tell whether a change was seen"
+    source_readings:
+      - sections/section-010/module-01/course-01-spec-status-and-the-control-loop.md
+    prompt: |-
+      You run `kubectl -n starfleet scale deployment scout --replicas=4`. Right after, `metadata.generation` is 5 and `status.observedGeneration` is 4. What does this show?
+    options:
+      - id: a
+        text: "The Deployment controller has not yet processed the change, so `status` still describes the older `spec`."
+        explanation: "Correct. `generation` grows with each `spec` change, and `observedGeneration` is the last one the controller processed."
+      - id: b
+        text: "The Deployment controller refused the change and rolled it back."
+        explanation: "A refusal would not leave the new `generation` in place. The two numbers differ only because processing is not finished."
+      - id: c
+        text: "Four replicas are already running and ready."
+        explanation: "The numbers do not count replicas. Replica counts are separate `status` fields."
+      - id: d
+        text: "The API server lost the change because the numbers differ."
+        explanation: "The API server stored the change, which is why `generation` is 5. Only the controller is behind."
+    correct_option: a
+    explanation: "`generation` is the version of the desired state and `observedGeneration` is the version the controller has processed. A gap means the controller is not caught up."
+
+  - id: ats080-010-q03
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Follow ownerReferences from a Pod to its Deployment"
+    source_readings:
+      - sections/section-010/module-01/course-02-ownership-from-deployment-to-pod.md
+    prompt: |-
+      A pod named `scout-6d5f7c9b8d-x2k4q` shows an owner reference of kind `ReplicaSet`. Where do you look to find the Deployment that is responsible for this pod?
+    options:
+      - id: a
+        text: "In the `ownerReferences` of the ReplicaSet named in the pod's owner reference."
+        explanation: "Correct. The chain is Pod to ReplicaSet to Deployment, and each object names its owner."
+      - id: b
+        text: "In the `ownerReferences` of the node that runs the pod."
+        explanation: "Nodes do not own pods. A pod's owner is the controller object that created it."
+      - id: c
+        text: "In the `status` of the Service that selects the pod."
+        explanation: "A Service selects pods by labels. It does not own them."
+      - id: d
+        text: "In the pod name only, because the Deployment name is always its first word."
+        explanation: "Names are only a convention. The `ownerReferences` entry with its `uid` is the real link."
+    correct_option: a
+    explanation: "Each object names its owner in `ownerReferences`. The pod names a ReplicaSet and the ReplicaSet names the Deployment."
+
+  - id: ats080-010-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Predict garbage collection for a deleted owner"
+    source_readings:
+      - sections/section-010/module-01/course-02-ownership-from-deployment-to-pod.md
+    prompt: |-
+      You run `kubectl -n starfleet delete deployment scout` with the default settings. What happens to the ReplicaSet and the pods of `scout`?
+    options:
+      - id: a
+        text: "They stay, because the pods are running."
+        explanation: "Running pods do not protect their owners. The garbage collector looks at ownership, not at health."
+      - id: b
+        text: "The garbage collector deletes the dependent ReplicaSet and pods in the background."
+        explanation: "Correct. The default is background deletion: the owner goes first and the garbage collector removes dependents that name it."
+      - id: c
+        text: "The Service `scout` deletes them, because it selects them."
+        explanation: "A Service does not own pods and never deletes them."
+      - id: d
+        text: "Only the pods are deleted. The ReplicaSet stays with zero replicas."
+        explanation: "The ReplicaSet also names the Deployment as its owner, so the garbage collector removes it as well."
+    correct_option: b
+    explanation: "With background cascading deletion the owner is removed first. The garbage collector then deletes dependents that name it in `ownerReferences`."
+
+  - id: ats080-010-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain level-triggered logic and missed events"
+    source_readings:
+      - sections/section-010/module-01/course-03-watches-and-level-triggered-reconciliation.md
+    prompt: |-
+      A controller was stopped for ten minutes. During that time someone deleted two pods that it manages. When the controller starts again it did not receive the two delete events. Why does it still create two pods?
+    options:
+      - id: a
+        text: "Because the API server replays every old event in order."
+        explanation: "The API server keeps events only for a short time. Controllers do not depend on a full replay."
+      - id: b
+        text: "Because it compares the current count of pods with `spec.replicas` and acts on the difference, whatever events it saw."
+        explanation: "Correct. Level-triggered logic uses the current state, so a missed event does not leave the gap open."
+      - id: c
+        text: "Because the kubelet tells the controller about each missing pod."
+        explanation: "The kubelet manages containers on its node. It does not report missing pods to the ReplicaSet controller."
+      - id: d
+        text: "Because the controller reads the delete events from the audit log."
+        explanation: "Controllers do not read audit logs. They list and watch objects."
+    correct_option: b
+    explanation: "A level-triggered controller reacts to the current state, so it finds the gap even when it missed the events that caused it."
+
+  - id: ats080-010-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Describe watches, resourceVersion and resync"
+    source_readings:
+      - sections/section-010/module-01/course-03-watches-and-level-triggered-reconciliation.md
+    prompt: |-
+      A controller keeps a local cache of pods and receives changes through a watch that starts at a given `resourceVersion`. What does this setup give the controller?
+    options:
+      - id: a
+        text: "A stream of changes after a known point, so it does not poll the API server for every pod again."
+        explanation: "Correct. It lists once, then watches from the returned `resourceVersion`, and the work queue holds the changes to process."
+      - id: b
+        text: "A lock that stops other clients from changing the pods."
+        explanation: "A watch is read-only and does not block writers. Concurrent writes are handled by conflict checks on `resourceVersion`."
+      - id: c
+        text: "A guarantee that no event is ever missed, even after a long outage."
+        explanation: "If the watch is too old the server reports that and the controller lists again. This is why the logic must be level-triggered."
+      - id: d
+        text: "A copy of the node's file system for each pod."
+        explanation: "A watch carries API objects, not files."
+    correct_option: a
+    explanation: "A list plus a watch from a `resourceVersion` gives an up-to-date cache and a stream of changes without repeated full reads."
+
+  - id: ats080-010-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Describe how a rollout moves between ReplicaSets"
+    source_readings:
+      - sections/section-010/module-02/course-01-drift-correction-and-rollouts.md
+    prompt: |-
+      You change the image in the pod template of the Deployment `probe`. Which statement about the controller's reaction is correct?
+    options:
+      - id: a
+        text: "It edits the pods in place and restarts them one by one."
+        explanation: "The pod template of an existing ReplicaSet does not change. Pods are replaced, not edited."
+      - id: b
+        text: "It deletes the Deployment and creates a new one with the new image."
+        explanation: "The Deployment keeps its `uid`. Only the ReplicaSets under it change."
+      - id: c
+        text: "It creates a new ReplicaSet for the new template and moves replicas to it within `maxSurge` and `maxUnavailable`."
+        explanation: "Correct. The old ReplicaSet scales down while the new one scales up, and the old one stays for `rollout undo`."
+      - id: d
+        text: "It waits until someone scales the Deployment to zero."
+        explanation: "A rollout starts on its own after a template change."
+    correct_option: c
+    explanation: "A template change creates a new ReplicaSet. The controller moves replicas from the old to the new one within the surge and unavailable limits."
+
+  - id: ats080-010-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read the Progressing and Available conditions"
+    source_readings:
+      - sections/section-010/module-02/course-02-conditions-and-progress-deadlines.md
+    prompt: |-
+      A rollout of `scout` shows `Available=True` and `Progressing=False` with the reason `ProgressDeadlineExceeded`. What does this mean?
+    options:
+      - id: a
+        text: "The old replicas still serve requests, but the new rollout made no progress within `progressDeadlineSeconds`."
+        explanation: "Correct. Enough old pods stay available, but the rollout is stuck. The controller does not roll back by itself."
+      - id: b
+        text: "The rollout finished and the Deployment is idle."
+        explanation: "A finished rollout shows `Progressing=True` with the reason `NewReplicaSetAvailable`."
+      - id: c
+        text: "The Deployment was deleted and the pods are being removed."
+        explanation: "Deletion is shown by a `deletionTimestamp`, not by these conditions."
+      - id: d
+        text: "The cluster has no free nodes, so the Deployment is paused."
+        explanation: "A paused Deployment shows a different reason, and the deadline reason does not name nodes."
+    correct_option: a
+    explanation: "`ProgressDeadlineExceeded` means no progress within the deadline. `Available` can stay true because old pods still run."
+
+  - id: ats080-010-q09
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Find the cause of blocked progress from pods and events"
+    source_readings:
+      - sections/section-010/module-02/course-03-reading-blocked-progress.md
+    prompt: |-
+      A new `probe` pod has the status `Running` and `READY 0/1`, and the Deployment reports `Progressing=False`. `kubectl describe pod` shows the event `Unhealthy: Readiness probe failed: HTTP probe failed with statuscode: 404`. What is the cause and the fix?
+    options:
+      - id: a
+        text: "The image cannot be pulled. Change the image tag."
+        explanation: "An image pull failure shows `ErrImagePull` or `ImagePullBackOff`, and the container would not be running."
+      - id: b
+        text: "The pod cannot be scheduled. Add more CPU to the node."
+        explanation: "A pod that cannot be scheduled stays `Pending`. This one is running."
+      - id: c
+        text: "The container runs but the readiness probe path returns 404. Fix the probe path in the Deployment template."
+        explanation: "Correct. The container is up and the check fails, so the pod never becomes ready. Keep the probe and correct its path."
+      - id: d
+        text: "The Deployment controller is down. Restart the controller manager."
+        explanation: "The controller already created and reported on the pod. The event comes from the kubelet's probe."
+    correct_option: c
+    explanation: "A running pod that is not ready, with a 404 from the probe, points to a wrong probe path. Fix the path and keep the probe."
+
+  - id: ats080-010-q10
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Explain finalizers and deletionTimestamp"
+    source_readings:
+      - sections/section-010/module-02/course-04-finalizers-and-garbage-collection.md
+    prompt: |-
+      A ConfigMap has a `deletionTimestamp` and the finalizer `starfleet.example.com/cleanup`. Nothing owns the finalizer any more, and the object stays. What is the correct way to let the deletion finish?
+    options:
+      - id: a
+        text: "Delete it again with `kubectl delete --force`."
+        explanation: "A second delete does not remove a finalizer, and the object stays until the list is empty."
+      - id: b
+        text: "Remove only that finalizer from `metadata.finalizers` with a patch, after you check that its cleanup is not needed."
+        explanation: "Correct. When the list is empty the API server removes the object. Check the cleanup first, because the finalizer exists to protect it."
+      - id: c
+        text: "Wait for the garbage collector, because it removes all terminating objects after a while."
+        explanation: "The garbage collector does not clear finalizers of unrelated objects."
+      - id: d
+        text: "Remove the `deletionTimestamp` with a patch."
+        explanation: "The `deletionTimestamp` cannot be removed by users. It marks a deletion in progress."
+    correct_option: b
+    explanation: "An object with a `deletionTimestamp` is removed when its finalizers are all gone. Release the finalizer after you confirm the cleanup is done."
+
+  - id: ats080-010-q11
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Fix a blocked rollout in place and prove it"
+    source_readings:
+      - sections/section-010/module-02/course-01-drift-correction-and-rollouts.md
+      - sections/section-010/module-02/course-02-conditions-and-progress-deadlines.md
+      - sections/section-010/module-02/course-03-reading-blocked-progress.md
+    prompt: |-
+      The Deployment `scout` is stuck with `ImagePullBackOff` on a new image tag. Which action fixes it and which evidence proves that it converged?
+    options:
+      - id: a
+        text: "Delete and re-create the Deployment. Evidence: the pod count."
+        explanation: "A new Deployment has a new `uid` and hides the fault. Pod count alone does not prove convergence."
+      - id: b
+        text: "Set the correct image on the existing Deployment. Evidence: `observedGeneration` equals `generation`, updated and available replicas match, and `Progressing` is true with `NewReplicaSetAvailable`."
+        explanation: "Correct. The fix is in place and the status shows that the controller saw the change and finished."
+      - id: c
+        text: "Increase `progressDeadlineSeconds`. Evidence: the `Progressing` condition disappears."
+        explanation: "A longer deadline does not fix the image. The condition would show the same fault later."
+      - id: d
+        text: "Scale the Deployment to zero and back. Evidence: `Available` true."
+        explanation: "The new pods still use the bad image, so the fault returns."
+    correct_option: b
+    explanation: "Fix the cause in the template, then prove convergence from `status`: observed generation, updated and available replicas, and the `Progressing` and `Available` conditions."
+

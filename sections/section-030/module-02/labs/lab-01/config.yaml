@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Providers, Identities, Connection Secrets And Deletion (LAB). Graded against the live cluster. Built untested.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-lab-030-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - ghcr.io/stefanprodan/podinfo:6.15.0
+      - curlimages/curl:8.22.0
+
+# Starting state: Outpost claims scout and probe. The provider identity cannot
+# manage Deployments, the claim scout has no connection secret, and the record
+# ConfigMap object of every claim is deleted together with the claim.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Install Crossplane, the provider, the function, the claim API and two claims
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference RBAC, Composition and claim change, then delete probe
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: identity-least-privilege
+      description: The provider can manage Deployments, but it is not bound to cluster-admin
+      type: file
+      source: validation/validate-identity-least-privilege.sh
+      hint: Create a ClusterRole for apps/deployments and bind it to the service account provider-kubernetes in crossplane-system. Do not bind cluster-admin. Check with kubectl auth can-i create deployments.apps --as=system:serviceaccount:crossplane-system:provider-kubernetes.
+    - name: claims-ready
+      description: The claim scout is Synced and Ready, and its Deployment is available
+      type: file
+      source: validation/validate-claims-ready.sh
+      hint: Read the conditions of the failing Object with kubectl get objects.kubernetes.crossplane.io. The Forbidden error names the missing permission. The claim becomes Ready after the provider retries.
+    - name: connection-secret
+      description: The Secret scout-conn in starfleet holds the key endpoint with the Service address
+      type: file
+      source: validation/validate-connection-secret.sh
+      hint: Set spec.writeConnectionSecretToRef.name to scout-conn on the claim scout. The Composition and the XRD already publish the key endpoint.
+    - name: record-orphaned
+      description: The Composition sets deletionPolicy Orphan on the record Object
+      type: file
+      source: validation/validate-record-orphaned.sh
+      hint: Add deletionPolicy Orphan under spec in the base of the composed resource named record, in the Composition outpost-kubernetes.
+    - name: probe-deleted-record-kept
+      description: The claim probe is gone with its namespace, and the ConfigMap record-probe still exists
+      type: file
+      source: validation/validate-probe-deleted-record-kept.sh
+      hint: Wait until the Object of probe shows deletionPolicy Orphan, then delete the claim probe. The namespace outpost-probe disappears; the ConfigMap record-probe in starfleet-records stays.
+
+teardown:
+  keepCluster: false

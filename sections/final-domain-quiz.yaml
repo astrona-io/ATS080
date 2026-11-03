@@ -1,0 +1,389 @@
+# Final domain knowledge check across all four sections.
+schema_version: 1
+kind: question_bank
+id: ats080-final
+course_id: ATS080
+exam_code: CNPA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: domain
+  id: platform-apis-and-provisioning-infrastructure
+  title: Platform APIs and Provisioning Infrastructure
+questions:
+  - id: ats080-final-010-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Tell apart edge-triggered and level-triggered logic"
+    source_readings:
+      - sections/section-010/module-01/course-03-watches-and-level-triggered-reconciliation.md
+    prompt: |-
+      A script reacts only to the event 'pod deleted' and then creates one pod. A controller compares the pod count with `spec.replicas`. Both are offline while three pods are deleted. Which statement is correct after both restart?
+    options:
+      - id: a
+        text: "Both restore all three pods, because both see the same events."
+        explanation: "Neither receives the missed events, and the script acts once per event it sees."
+      - id: b
+        text: "The script restores all three pods and the controller restores none."
+        explanation: "The reverse is true: the controller reads current state, the script depends on events."
+      - id: c
+        text: "The controller restores all three pods and the script restores none."
+        explanation: "Correct. The comparison with `spec.replicas` finds the gap even when the events were missed, and the script has no event to react to."
+      - id: d
+        text: "Neither restores any pod until a person scales the Deployment."
+        explanation: "The controller needs no person. Its loop closes the gap by itself."
+    correct_option: c
+    explanation: "Level-triggered logic uses the current state, so missed events do not matter. Edge-triggered logic needs every event."
+
+  - id: ats080-final-010-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Interpret a Deployment that finished a rollout"
+    source_readings:
+      - sections/section-010/module-02/course-02-conditions-and-progress-deadlines.md
+    prompt: |-
+      Which set of facts shows that a rollout of `scout` is complete?
+    options:
+      - id: a
+        text: "`observedGeneration` equals `generation`, all replicas are updated and available, and `Progressing` is true with the reason `NewReplicaSetAvailable`."
+        explanation: "Correct. The controller saw the latest spec, every replica runs the new template and is available, and the controller reports the new ReplicaSet as available."
+      - id: b
+        text: "`Available` is true and nothing else."
+        explanation: "Old pods can keep `Available` true while the rollout is stuck."
+      - id: c
+        text: "The pod list shows at least one `Running` pod."
+        explanation: "One running pod may belong to the old ReplicaSet."
+      - id: d
+        text: "`generation` is higher than `observedGeneration`."
+        explanation: "That gap means the controller has not processed the latest change."
+    correct_option: a
+    explanation: "Completion needs a matching observed generation, all replicas updated and available, and the `NewReplicaSetAvailable` reason."
+
+  - id: ats080-final-010-q03
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Handle a dependent object with a wrong owner uid"
+    source_readings:
+      - sections/section-010/module-01/course-02-ownership-from-deployment-to-pod.md
+      - sections/section-010/module-02/course-04-finalizers-and-garbage-collection.md
+    prompt: |-
+      You create a ConfigMap with an `ownerReferences` entry that names the Deployment `scout` with a `uid` copied from another cluster. A minute later the ConfigMap is gone. Why?
+    options:
+      - id: a
+        text: "The garbage collector found no live owner with that `uid` and removed the dependent."
+        explanation: "Correct. The owner is identified by `uid`, not only by name, and a missing owner makes the dependent eligible for deletion."
+      - id: b
+        text: "The Deployment controller deletes all ConfigMaps it does not know."
+        explanation: "The Deployment controller manages ReplicaSets and does not touch ConfigMaps."
+      - id: c
+        text: "A ConfigMap cannot have an owner."
+        explanation: "Any object can have an owner. Dependents of a Deployment are normally ReplicaSets, but a ConfigMap can also be a dependent."
+      - id: d
+        text: "The kubelet cleans ConfigMaps that no pod mounts."
+        explanation: "The kubelet does not delete ConfigMaps."
+    correct_option: a
+    explanation: "Owners are matched by `uid`. A dependent whose owners are all missing is deleted by the garbage collector."
+
+  - id: ats080-final-010-q04
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Choose the next diagnostic step for blocked progress"
+    source_readings:
+      - sections/section-010/module-02/course-03-reading-blocked-progress.md
+    prompt: |-
+      A Deployment reports `Progressing=False` with `ProgressDeadlineExceeded`. Its new pod is `Pending` and has no node. Which command gives the most direct evidence of the cause?
+    options:
+      - id: a
+        text: "`kubectl describe pod` on the new pod and read the `FailedScheduling` event."
+        explanation: "Correct. A pod without a node is stuck in scheduling, and the scheduler writes the reason as an event on the pod."
+      - id: b
+        text: "`kubectl logs` on the new pod."
+        explanation: "A pod without a node has no container, so there are no logs."
+      - id: c
+        text: "`kubectl rollout undo` and stop looking."
+        explanation: "Undo can restore service but the cause stays unknown, and the same change will fail again."
+      - id: d
+        text: "`kubectl delete pod` until it starts."
+        explanation: "The ReplicaSet creates the same pod again, and it stays unschedulable."
+    correct_option: a
+    explanation: "A `Pending` pod without a node is a scheduling problem. The `FailedScheduling` event names the reason, for example not enough CPU."
+# Extra final-quiz questions for section 020 (APIs for Self-Service Platforms). Append under `questions:` of the final quiz bank.
+  - id: ats080-final-020-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Predict what the API server stores after pruning and defaulting"
+    source_readings:
+      - sections/section-020/module-01/course-02-schemas-required-enums-and-defaults.md
+    prompt: |-
+      A CRD schema defines `spec.replicas` with `default: 1` and does not preserve unknown fields. A tenant applies an object with only `spec.tier: dev`, `spec.owner: scout-team` and the extra field `spec.colour: blue`. What does `kubectl get -o yaml` show for `spec`?
+    options:
+      - id: a
+        text: "An error that names `colour` as unknown."
+        explanation: "The API server prunes silently. It rejects an unknown field only with strict validation on the client."
+      - id: b
+        text: "`tier` and `owner` only."
+        explanation: "The default is applied when the field is missing, so `replicas: 1` is present."
+      - id: c
+        text: "`tier`, `owner`, `colour` and no `replicas`."
+        explanation: "Unknown fields are pruned and defaults are applied."
+      - id: d
+        text: "`tier`, `owner` and `replicas: 1`, without `colour`."
+        explanation: "Correct. The API server drops `colour` and sets the default for `replicas`."
+    correct_option: d
+    explanation: "Pruning removes unknown fields and defaulting adds missing ones."
+
+  - id: ats080-final-020-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Pick the rule that blocks a shrinking volume"
+    source_readings:
+      - sections/section-020/module-01/course-03-cel-validation-rules.md
+    prompt: |-
+      Which rule on `spec.storageGB` allows an increase but blocks a decrease on update?
+    options:
+      - id: a
+        text: "`self == oldSelf`"
+        explanation: "This blocks every change, including an increase."
+      - id: b
+        text: "`self <= oldSelf`"
+        explanation: "This allows a decrease and blocks an increase."
+      - id: c
+        text: "`self >= oldSelf`"
+        explanation: "Correct. A transition rule that uses `oldSelf` runs on update and requires the new value to be at least the old one."
+      - id: d
+        text: "`self > 0`"
+        explanation: "This only checks that the value is positive."
+    correct_option: c
+    explanation: "Transition rules compare the new and the stored value."
+
+  - id: ats080-final-020-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Grant access to a custom resource without granting status"
+    source_readings:
+      - sections/section-020/module-02/course-03-tenant-rbac-and-admission-limits.md
+    prompt: |-
+      Which Role rule lets a tenant group create and read `Environment` objects of the group `platform.example` and does not let it write the status?
+    options:
+      - id: a
+        text: "`apiGroups: [\"platform.example\"]`, `resources: [\"*\"]`, `verbs: [\"*\"]`"
+        explanation: "Wildcards include `environments/status` and every future resource."
+      - id: b
+        text: "`apiGroups: [\"platform.example\"]`, `resources: [\"environments\"]`, `verbs: [\"create\", \"get\", \"list\", \"watch\"]`"
+        explanation: "Correct. The rule names the resource and the verbs, and it has no `environments/status` entry."
+      - id: c
+        text: "`apiGroups: [\"\"]`, `resources: [\"environments\"]`, `verbs: [\"create\", \"get\"]`"
+        explanation: "The empty group is the core API group. The custom resource is in `platform.example`."
+      - id: d
+        text: "`apiGroups: [\"platform.example\"]`, `resources: [\"environments/status\"]`, `verbs: [\"update\"]`"
+        explanation: "This grants only the status endpoint, which is the permission that the tenant must not have."
+    correct_option: b
+    explanation: "Name the group, the resource and the verbs, and leave the status subresource out."
+
+  - id: ats080-final-020-q04
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Decide when a conversion webhook is needed"
+    source_readings:
+      - sections/section-020/module-02/course-01-versions-deprecation-and-conversion.md
+    prompt: |-
+      Version `v1beta1` renames the field `spec.size` of `v1alpha1` to `spec.storageGB`. The CRD uses `conversion.strategy: None`. What is the result for a stored `v1alpha1` object that is read as `v1beta1`?
+    options:
+      - id: a
+        text: "The object keeps `spec.size`, which is unknown in `v1beta1`, so the value is pruned and the new field is empty."
+        explanation: "Correct. A rename needs a conversion webhook, or a new optional field that both versions carry."
+      - id: b
+        text: "The API server refuses to serve `v1beta1`."
+        explanation: "It serves the version. The data is the problem, not the serving."
+      - id: c
+        text: "The CRD is rejected when it is applied."
+        explanation: "The CRD is valid. The schemas are not checked for compatibility."
+      - id: d
+        text: "The API server moves the value to `storageGB` automatically."
+        explanation: "With `None` the API server only changes `apiVersion`. It never moves values."
+    correct_option: a
+    explanation: "Use a webhook for renames, or only add optional fields with strategy `None`."
+  - id: ats080-final-030-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain how a claim change reaches the composed resources"
+    source_readings:
+      - sections/section-030/module-01/course-03-following-a-claim-through-reconciliation.md
+    prompt: "A developer changes `spec.replicas` of a claim from 1 to 3. Which statement describes how the Deployment changes?"
+    options:
+      - id: a
+        text: "The change is copied to the composite resource, the pipeline runs again and a patch writes the new value into the Deployment Object."
+        explanation: "Correct. Every change goes through the claim, the composite resource and the pipeline."
+      - id: b
+        text: "The developer must also edit the Deployment Object."
+        explanation: "Hand edits of composed resources are reverted by Crossplane."
+      - id: c
+        text: "The provider reads the claim directly and scales the Deployment."
+        explanation: "The provider only sees its own kinds, such as Object."
+      - id: d
+        text: "Nothing changes until the Composition is deleted and created again."
+        explanation: "A change of the claim spec is reconciled without a new Composition."
+    correct_option: a
+    explanation: "The claim is the only place where a developer changes a request."
+
+  - id: ats080-final-030-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose management policies for an existing resource"
+    source_readings:
+      - sections/section-030/module-02/course-03-management-policies-and-deletion.md
+    prompt: "The platform team wants Crossplane to report the state of a Kubernetes object that another team created, without ever changing or deleting it. Which setting fits?"
+    options:
+      - id: a
+        text: "`managementPolicies: [\"Observe\"]` on the Object."
+        explanation: "Correct. An observe-only Object reads the object and never creates, updates or deletes it."
+      - id: b
+        text: "`deletionPolicy: Delete` on the Object."
+        explanation: "This would delete the object when the Object is deleted, which is the opposite of the wish."
+      - id: c
+        text: "`compositeDeletePolicy: Foreground` on the claim."
+        explanation: "This controls how a claim is deleted, not what the provider may do."
+      - id: d
+        text: "`writeConnectionSecretToRef` on the Object."
+        explanation: "This chooses where a secret is written. It limits no actions."
+    correct_option: a
+    explanation: "Management policies list the actions a provider may take on a resource."
+
+  - id: ats080-final-030-q03
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Tell the delete policies of a claim apart"
+    source_readings:
+      - sections/section-030/module-02/course-03-management-policies-and-deletion.md
+    prompt: "A team wants a developer who deletes a claim to see the claim stay visible until all composed resources have been removed. Which setting does this?"
+    options:
+      - id: a
+        text: "`compositeDeletePolicy: Foreground` on the claim."
+        explanation: "Correct. Foreground keeps the claim until the composite resource is gone."
+      - id: b
+        text: "`compositeDeletePolicy: Background` on the claim."
+        explanation: "Background deletes the claim at once and lets the removal continue later."
+      - id: c
+        text: "`deletionPolicy: Orphan` on every composed Object."
+        explanation: "Orphan would leave the wrapped objects behind."
+      - id: d
+        text: "`crossplane.io/paused: \"true\"` on the claim."
+        explanation: "A paused claim is not reconciled, so nothing is removed."
+    correct_option: a
+    explanation: "The claim policy controls waiting. The Object policy controls whether wrapped objects are kept."
+
+  - id: ats080-final-030-q04
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Separate identity from permission"
+    source_readings:
+      - sections/section-030/module-02/course-01-providers-providerconfigs-and-identity.md
+    prompt: "A ProviderConfig with `InjectedIdentity` is correct, and the provider pod is healthy. A composed Object for a Service is still rejected with `forbidden`. Which statement explains this?"
+    options:
+      - id: a
+        text: "The identity is the service account of the provider, and it has no RBAC permission for Services."
+        explanation: "Correct. InjectedIdentity chooses the identity. The permissions come from the roles bound to it."
+      - id: b
+        text: "The ProviderConfig is missing, so no identity exists."
+        explanation: "A missing ProviderConfig produces a different message that names the config."
+      - id: c
+        text: "The Composition is in `Pipeline` mode."
+        explanation: "Pipeline mode has no influence on permissions."
+      - id: d
+        text: "The claim has no connection secret."
+        explanation: "Secrets do not affect creating a Service."
+    correct_option: a
+    explanation: "A ProviderConfig picks the identity. RBAC decides what it may do."
+  - id: ats080-final-040-q01
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain why a custom resource needs a running controller"
+    source_readings:
+      - sections/section-040/module-01/course-01-crd-without-a-controller.md
+    prompt: "A platform team installs a CRD and users create objects of the new type, but nothing in the cluster changes. Which statement is correct?"
+    options:
+      - id: a
+        text: "The CRD only registers the type and stores objects. A running controller must act on them."
+        explanation: "Correct. The API server stores custom resources. Behavior comes from a controller."
+      - id: b
+        text: "The API server runs the logic of a CRD when the schema is valid."
+        explanation: "A schema validates input. It contains no logic that creates or changes other objects."
+      - id: c
+        text: "A restart of the kube-apiserver makes the CRD act on stored objects."
+        explanation: "A restart changes nothing about behavior. No controller exists."
+      - id: d
+        text: "Objects only act when created in the namespace kube-system."
+        explanation: "The namespace plays no role in whether a controller exists."
+    correct_option: a
+    explanation: "A CRD adds an API type. A controller provides the behavior."
+
+  - id: ats080-final-040-q02
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Choose cleanup mechanisms for dependents in and across namespaces"
+    source_readings:
+      - sections/section-040/module-01/course-03-finalizers-and-owner-references.md
+    prompt: "An operator creates a ConfigMap in the namespace of each custom resource and a record in a shared namespace. Which pair of mechanisms cleans up both when the custom resource is deleted?"
+    options:
+      - id: a
+        text: "An owner reference for the ConfigMap, and a finalizer that deletes the shared record."
+        explanation: "Correct. Owner references work inside one namespace. A finalizer lets the controller clean up objects that references cannot reach."
+      - id: b
+        text: "An owner reference for both objects."
+        explanation: "A namespaced owner cannot own an object in another namespace."
+      - id: c
+        text: "A finalizer for the ConfigMap, and an owner reference for the shared record."
+        explanation: "This swaps the roles. The shared record is the one that references cannot cover."
+      - id: d
+        text: "No mechanism, because the garbage collector removes everything by label."
+        explanation: "The garbage collector uses owner references, not labels."
+    correct_option: a
+    explanation: "Use owner references in the same namespace and finalizers across namespaces."
+
+  - id: ats080-final-040-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Diagnose an operator-managed resource that never becomes ready"
+    source_readings:
+      - sections/section-040/module-02/course-02-from-issuer-to-secret.md
+      - sections/section-040/module-02/course-04-leader-election-and-operator-down.md
+    prompt: "A Certificate has no status at all, while another one in the same cluster is Ready. What is the best first check?"
+    options:
+      - id: a
+        text: "Whether the controller is running and holds its lease."
+        explanation: "Correct. No status means nobody reconciled the object. The Ready Certificate may predate an outage."
+      - id: b
+        text: "Whether the Secret already exists."
+        explanation: "The Secret appears after issuing, so its absence is a symptom."
+      - id: c
+        text: "Whether the Issuer is selfSigned."
+        explanation: "An issuer problem shows up as a condition message, which needs a running controller."
+      - id: d
+        text: "Whether the CRD is namespaced."
+        explanation: "The scope of the CRD is fixed and was the same for the Ready Certificate."
+    correct_option: a
+    explanation: "An empty status points at the controller before it points at the issuer."
+
+  - id: ats080-final-040-q04
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Judge the effect of operator permissions and webhooks"
+    source_readings:
+      - sections/section-040/module-02/course-03-upgrades-and-blast-radius.md
+      - sections/section-040/module-02/course-04-leader-election-and-operator-down.md
+    prompt: "A reviewer asks what could go wrong with an operator that has a ClusterRole on Secrets and a validating webhook with `failurePolicy: Fail`. Which answer is correct?"
+    options:
+      - id: a
+        text: "A compromised controller can read Secrets in every namespace, and a webhook outage blocks writes of its own resource types."
+        explanation: "Correct. Cluster-wide Secret access and a Fail policy have exactly these two effects."
+      - id: b
+        text: "The controller can read only Secrets in its own namespace, and a webhook outage blocks all writes in the cluster."
+        explanation: "Both parts are wrong. A ClusterRole is cluster-wide, and webhook rules limit which resources call it."
+      - id: c
+        text: "The webhook outage makes existing Secrets unreadable."
+        explanation: "Secrets are ordinary objects. An outage of an operator does not affect reading them."
+      - id: d
+        text: "The ClusterRole has no effect until the webhook is down."
+        explanation: "RBAC applies at all times."
+    correct_option: a
+    explanation: "Read the ClusterRole for blast radius, and read the failure policy for outage behavior."

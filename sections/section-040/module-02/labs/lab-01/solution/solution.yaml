@@ -1,0 +1,32 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: starfleet-selfsigned
+  namespace: starfleet
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: scout-cert
+  namespace: starfleet
+spec:
+  secretName: scout-tls
+  duration: 48h
+  renewBefore: 12h
+  dnsNames:
+    - scout.starfleet.svc
+    - scout.starfleet.svc.cluster.local
+  issuerRef:
+    name: starfleet-selfsigned
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: outpost-issuer
+  namespace: outpost
+spec:
+  selfSigned: {}

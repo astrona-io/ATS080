@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Versions, Status Contracts And Tenant Access (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-lab-020-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+
+# Starting state: namespaces starfleet and outpost, the DatabaseClaim CRD with
+# the served versions v1alpha1 (storage) and v1beta1, and the claim scout-db in
+# starfleet at generation 2 with no status. No Roles, no RoleBindings.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Create the namespaces, the two-version DatabaseClaim CRD and the claim scout-db
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: versions
+      description: v1beta1 is the only storage version, v1alpha1 is served and deprecated with a warning, and conversion is None
+      type: file
+      source: validation/validate-versions.sh
+      hint: Change storage on both versions in one JSON patch (v1alpha1 false, v1beta1 true). Add deprecated true and a deprecationWarning that names v1beta1 to v1alpha1. Keep both versions served.
+    - name: tenant-access
+      description: team-starfleet manages claims in starfleet, auditors only read them, team-outpost has no access, and nobody but the controller writes status
+      type: file
+      source: validation/validate-tenant-access.sh
+      hint: Create a Role with create, get, list, watch, update, patch and delete on databaseclaims in starfleet and bind it to the group team-starfleet. Create a second Role with get, list and watch and bind it to auditors. A Role without a RoleBinding grants nothing. Test with kubectl auth can-i --as=<user> --as-group=<group>.
+    - name: least-privilege
+      description: The Roles use no wildcard, do not grant databaseclaims/status and no ClusterRoleBinding names the three groups
+      type: file
+      source: validation/validate-least-privilege.sh
+      hint: List verbs and resources one by one. Do not write "*", do not add databaseclaims/status, and use RoleBindings in starfleet instead of ClusterRoleBindings.
+    - name: ready-condition
+      description: scout-db reports a Ready condition that is True and current for the generation of the claim
+      type: file
+      source: validation/validate-ready-condition.sh
+      hint: Read metadata.generation of scout-db first. Write status through the status subresource (kubectl patch --subresource=status --type=merge) with a Ready condition with status "True", a reason, a message, lastTransitionTime and an observedGeneration equal to the generation.
+    - name: contract-intact
+      description: The CRD was not recreated, scout-db was kept and the schema still rejects an unknown engine in both versions
+      type: file
+      source: validation/validate-contract-intact.sh
+      hint: Deleting the CRD deletes scout-db. Patch or apply the CRD in place and do not remove the schema or the rules.
+
+teardown:
+  keepCluster: false

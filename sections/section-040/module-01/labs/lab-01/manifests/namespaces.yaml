@@ -1,0 +1,17 @@
+# Namespaces for the operator pattern playground.
+# starfleet holds the Beacon resources, beacon-system will hold the operator,
+# beacon-registry holds one registry entry per Beacon.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: beacon-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: beacon-registry

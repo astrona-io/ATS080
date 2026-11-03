@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# CRD Schemas And Validation (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-lab-020-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+
+# Starting state: namespaces starfleet and outpost, an open DatabaseClaim CRD
+# (any spec accepted, no status subresource, no printer columns) and one
+# existing claim, probe-db, in starfleet.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Create the namespaces, the open DatabaseClaim CRD and the claim probe-db
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: schema-rejects-invalid
+      description: The schema rejects claims without a spec, without an engine, with an unknown engine or environment, or with a size outside 1 to 500
+      type: file
+      source: validation/validate-schema-rejects-invalid.sh
+      hint: Make spec required, make engine required with an enum of postgres and mysql, set an enum on environment and minimum 1 and maximum 500 on storageGB. Test with kubectl apply --dry-run=server. A valid claim must still be accepted.
+    - name: defaults-applied
+      description: A claim with only an engine gets storageGB 10, environment dev and highAvailability false
+      type: file
+      source: validation/validate-defaults-applied.sh
+      hint: Add default 10 to storageGB, dev to environment and false to highAvailability under spec properties. A default only works on a structural schema, so keep type on every node.
+    - name: cel-rules
+      description: A prod claim needs highAvailability, the engine is immutable and storageGB never shrinks
+      type: file
+      source: validation/validate-cel-rules.sh
+      hint: Add x-kubernetes-validations to spec (self.environment != 'prod' || self.highAvailability) and to the engine and storageGB properties (self == oldSelf and self >= oldSelf). Transition rules run only on update.
+    - name: status-subresource
+      description: The status subresource is on and the status schema keeps phase and observedGeneration
+      type: file
+      source: validation/validate-status-subresource.sh
+      hint: Add subresources with status set to an empty object, and a status property of type object with phase (string) and observedGeneration (integer). Without them the API server prunes the values you write.
+    - name: printer-columns
+      description: kubectl get shows the columns Engine, Environment and Phase
+      type: file
+      source: validation/validate-printer-columns.sh
+      hint: Add additionalPrinterColumns with name, type and jsonPath for .spec.engine, .spec.environment and .status.phase.
+    - name: crd-and-claim-kept
+      description: The CRD was updated in place and probe-db was not deleted
+      type: file
+      source: validation/validate-crd-and-claim-kept.sh
+      hint: Deleting the CRD deletes every claim. Apply the changed CRD with kubectl apply instead, and keep the version v1alpha1 and the Namespaced scope.
+
+teardown:
+  keepCluster: false

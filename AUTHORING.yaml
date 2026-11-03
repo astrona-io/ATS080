@@ -1,5 +1,5 @@
 version: 1
-approval: CNPA requested 2026-10-11; established reading-only scope
+approval: CNPA requested 2026-10-11; reading-only scope lifted by the maintainer 2026-11-03 (labs, playgrounds, capstones, quizzes in scope)
 course:
   id: ATS080
   certification:
@@ -14,18 +14,18 @@ course:
     - Infrastructure Provisioning with Kubernetes
     - Kubernetes Operator Pattern for Integration
 defaults:
-  playground: false
-  module_lab: false
-  capstone: false
-  section_quiz: false
+  playground: true
+  module_lab: true
+  capstone: true
+  section_quiz: true
   final_quiz: true
 assessment_format: YAML question banks v1, registered in assessments/index.yaml
 sections:
 - id: section-010
   title: Kubernetes Reconciliation Loop
   curriculum_item: Kubernetes Reconciliation Loop
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
     title: Observe, Compare, Act And Report
@@ -35,16 +35,16 @@ sections:
     - Identify blocked convergence and actionable status evidence.
     outline:
     - Observe, Compare, Act And Report
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-010/module-01/course-01-observe-compare-act-and-report.md
       adapted_from: ATS064/sections/section-050/module-01/course-01-observe-compare-act-and-report.md
 - id: section-020
   title: APIs for Self-Service Platforms (CRDs)
   curriculum_item: APIs for Self-Service Platforms (CRDs)
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
     title: Custom Resource Schemas, Status And Self-Service Contracts
@@ -54,16 +54,16 @@ sections:
     - Reason about validation, versioning and tenant permissions.
     outline:
     - Custom Resource Schemas, Status And Self-Service Contracts
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-020/module-01/course-01-custom-resource-schemas-status-and-self-service-contracts.md
       adapted_from: null
 - id: section-030
   title: Infrastructure Provisioning with Kubernetes
   curriculum_item: Infrastructure Provisioning with Kubernetes
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
     title: Infrastructure Claims, Provider Identities And External Lifecycle
@@ -73,16 +73,16 @@ sections:
     - Reason about retention, deletion and partial failures.
     outline:
     - Infrastructure Claims, Provider Identities And External Lifecycle
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-030/module-01/course-01-infrastructure-claims-provider-identities-and-external-lifecycle.md
       adapted_from: null
 - id: section-040
   title: Kubernetes Operator Pattern for Integration
   curriculum_item: Kubernetes Operator Pattern for Integration
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
   modules:
   - id: module-01
     title: Domain Controllers, Integration And Repeated Safe Actions
@@ -92,8 +92,8 @@ sections:
     - Reason about permissions, lifecycle and upgrade compatibility.
     outline:
     - Domain Controllers, Integration And Repeated Safe Actions
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     sources:
     - reading: sections/section-040/module-01/course-01-domain-controllers-integration-and-repeated-safe-actions.md
       adapted_from: null

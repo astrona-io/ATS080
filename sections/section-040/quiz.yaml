@@ -1,0 +1,290 @@
+# Knowledge check for section 040. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats080-040
+course_id: ATS080
+exam_code: CNPA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-040
+  title: "Kubernetes Operator Pattern for Integration"
+questions:
+
+  - id: ats080-040-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain what a CRD adds to the API server"
+    source_readings:
+      - sections/section-040/module-01/course-01-crd-without-a-controller.md
+    prompt: "A team applies a CRD for a new `Beacon` type and then creates a `Beacon` object. `kubectl get beacons` lists it, but no ConfigMap or pod appears. What is the most likely reason?"
+    options:
+      - id: a
+        text: "The CRD schema is invalid, so the object was stored incorrectly."
+        explanation: "An invalid schema makes the API server reject the object. This one was accepted and listed."
+      - id: b
+        text: "No controller is running for the type, and the API server only stores objects."
+        explanation: "Correct. A CRD adds a type and stores its objects. Behavior comes only from a controller that watches them."
+      - id: c
+        text: "A CRD can create ConfigMaps only after the cluster restarts."
+        explanation: "A restart changes nothing. The API server never creates child objects on its own."
+      - id: d
+        text: "The Beacon must be created in `kube-system` to trigger actions."
+        explanation: "The namespace does not trigger anything. Any namespace stores the object the same way."
+    correct_option: b
+    explanation: "A CRD registers a type. Only a running controller turns objects of that type into actions."
+
+  - id: ats080-040-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Separate level-based reconciliation from event handling"
+    source_readings:
+      - sections/section-040/module-01/course-02-reconcile-loop-in-a-deployment.md
+    prompt: "A bash operator restarts after a crash. During the outage, two Beacons were created. After the restart, the loop lists all Beacons and creates the missing child ConfigMaps. Which property makes this work?"
+    options:
+      - id: a
+        text: "The loop is level-based: it compares desired and actual state for every object on each pass."
+        explanation: "Correct. It does not need to have seen the creation events. It reads the current state and closes the gap."
+      - id: b
+        text: "The API server replays the missed creation events to the new pod."
+        explanation: "The API server does not replay events to a restarted client. A new list starts from the current state."
+      - id: c
+        text: "The Deployment keeps a queue of events on disk."
+        explanation: "A Deployment has no event queue. Anything a pod stores on its own filesystem is lost on restart."
+      - id: d
+        text: "The Beacon status stores the pending actions for the controller."
+        explanation: "Status reports what the controller observed. It is not a work queue, and the new Beacons had none."
+    correct_option: a
+    explanation: "A level-based loop reads current state and reconciles it, so missed events do not matter."
+
+  - id: ats080-040-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Write idempotent create-if-missing actions"
+    source_readings:
+      - sections/section-040/module-01/course-02-reconcile-loop-in-a-deployment.md
+    prompt: "The reconcile loop runs every ten seconds. A registry ConfigMap that the operator created is edited by an administrator to add an annotation. The next pass must not remove the annotation. Which action does that?"
+    options:
+      - id: a
+        text: "`kubectl apply` of the full ConfigMap on every pass."
+        explanation: "Apply would reset the fields it manages on each pass, and it rewrites the object on every loop."
+      - id: b
+        text: "Delete and recreate the ConfigMap on every pass."
+        explanation: "This removes the annotation and creates needless churn and events."
+      - id: c
+        text: "Check whether the ConfigMap exists, and create it only if it is missing."
+        explanation: "Correct. Create-if-missing leaves an existing object alone, so the administrator's change stays."
+      - id: d
+        text: "Restart the operator pod before each pass."
+        explanation: "A restart does not change what the loop does with an existing object."
+    correct_option: c
+    explanation: "Create-if-missing is idempotent and does not overwrite objects that already exist."
+
+  - id: ats080-040-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Report progress with status and observedGeneration"
+    source_readings:
+      - sections/section-040/module-01/course-02-reconcile-loop-in-a-deployment.md
+    prompt: "A user edits `spec.message` of a Beacon. `metadata.generation` becomes 3, and `status.observedGeneration` is still 2. What does this tell you?"
+    options:
+      - id: a
+        text: "The controller has not yet processed the latest spec."
+        explanation: "Correct. observedGeneration is the generation the controller last handled. A lower value means the spec change is still pending."
+      - id: b
+        text: "The Beacon was deleted and recreated."
+        explanation: "Recreating gives a new object with its own generation. It does not leave the generation higher than the observed one."
+      - id: c
+        text: "The CRD has two versions."
+        explanation: "Versions are a CRD property and do not change generation numbers."
+      - id: d
+        text: "The status subresource is disabled."
+        explanation: "With status disabled, the field could not be written at all. A stale value shows the controller is behind."
+    correct_option: a
+    explanation: "observedGeneration behind generation means the controller has not caught up with the latest spec."
+
+  - id: ats080-040-q05
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Choose finalizers for cross-namespace cleanup"
+    source_readings:
+      - sections/section-040/module-01/course-03-finalizers-and-owner-references.md
+    prompt: "Each Beacon in `starfleet` has a registry ConfigMap in `beacon-registry`. When the Beacon is deleted, the registry entry must also go. Why does an `ownerReference` not solve this?"
+    options:
+      - id: a
+        text: "Owner references work only for Secrets."
+        explanation: "Owner references work for any object kind. The limit is the namespace."
+      - id: b
+        text: "The garbage collector does not run on a kind cluster."
+        explanation: "It does run. The problem is the design of the reference."
+      - id: c
+        text: "An owner reference can point only to an owner in the same namespace, so a finalizer must delete the entry."
+        explanation: "Correct. A namespaced owner cannot own an object in another namespace. A finalizer blocks deletion until the controller removes the entry."
+      - id: d
+        text: "Owner references delete the owner when the child is deleted."
+        explanation: "The direction is the opposite. Deleting the owner deletes the dependents."
+    correct_option: c
+    explanation: "A namespaced owner can only own objects in its own namespace. Use a finalizer for the rest."
+
+  - id: ats080-040-q06
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Read finalizer behavior when the controller is down"
+    source_readings:
+      - sections/section-040/module-01/course-03-finalizers-and-owner-references.md
+    prompt: "The Beacon operator is scaled to zero. An administrator runs `kubectl delete beacon scout -n starfleet --wait=false`. The command returns, but the object is still listed with a `deletionTimestamp`. Why?"
+    options:
+      - id: a
+        text: "The finalizer is still on the object, and only the controller removes it after cleanup."
+        explanation: "Correct. The API server marks the object for deletion and waits until the finalizers are gone. Nothing removes them while the controller is down."
+      - id: b
+        text: "The API server cached the object and refreshes it later."
+        explanation: "There is no such cache. The object really exists and is marked."
+      - id: c
+        text: "The delete was rejected by RBAC."
+        explanation: "A rejected delete returns an error and sets no timestamp."
+      - id: d
+        text: "The garbage collector keeps objects for ten minutes."
+        explanation: "The garbage collector does not delay deletion by a timer."
+    correct_option: a
+    explanation: "Finalizers block final removal until the controller does its cleanup and removes them."
+
+  - id: ats080-040-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Verify least-privilege RBAC for a controller"
+    source_readings:
+      - sections/section-040/module-01/course-02-reconcile-loop-in-a-deployment.md
+    prompt: "You want to prove that the Beacon operator cannot read Secrets in `starfleet`, without opening a shell in its pod. Which command answers that?"
+    options:
+      - id: a
+        text: "`kubectl get pods -n beacon-system`"
+        explanation: "This shows whether the pods run, not what they may do."
+      - id: b
+        text: "`kubectl auth can-i get secrets -n starfleet --as=system:serviceaccount:beacon-system:beacon-operator`"
+        explanation: "Correct. It asks the API server to evaluate RBAC for that service account and prints yes or no."
+      - id: c
+        text: "`kubectl describe crd beacons.ops.starfleet.example`"
+        explanation: "The CRD has no information about who may read Secrets."
+      - id: d
+        text: "`kubectl logs deployment/beacon-operator`"
+        explanation: "Logs show what the script did. They do not prove what it is allowed to do."
+    correct_option: b
+    explanation: "kubectl auth can-i with --as evaluates RBAC for any identity."
+
+  - id: ats080-040-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Diagnose a Certificate with no status"
+    source_readings:
+      - sections/section-040/module-02/course-04-leader-election-and-operator-down.md
+      - sections/section-040/module-02/course-02-from-issuer-to-secret.md
+    prompt: "A new Certificate shows an empty READY column and no conditions. The webhook accepted it. Existing TLS Secrets still work. What do you check first?"
+    options:
+      - id: a
+        text: "Whether the cert-manager controller Deployment is running."
+        explanation: "Correct. With no controller, nothing reconciles the object, so no status is written. Existing Secrets are unaffected."
+      - id: b
+        text: "Whether the node image supports TLS."
+        explanation: "TLS support in the node is not related to status."
+      - id: c
+        text: "Whether the Secret exists in `kube-system`."
+        explanation: "The Secret goes to the namespace of the Certificate, and it will not exist until it is issued."
+      - id: d
+        text: "Whether the CRD `storedVersions` list is empty."
+        explanation: "A stored version exists as soon as objects are written, and it is not the cause here."
+    correct_option: a
+    explanation: "No status means nobody reconciled the object. Check the controller."
+
+  - id: ats080-040-q09
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read a Ready condition message"
+    source_readings:
+      - sections/section-040/module-02/course-02-from-issuer-to-secret.md
+    prompt: "A Certificate has `Ready=False`, and the condition message says that the issuer `outpost-issuer` was not found. The `issuerRef` kind is `Issuer`. What fixes it without editing the Certificate?"
+    options:
+      - id: a
+        text: "Create a ClusterIssuer with that name."
+        explanation: "The issuerRef names the kind Issuer. A ClusterIssuer does not satisfy it."
+      - id: b
+        text: "Create an Issuer named `outpost-issuer` in the Certificate's namespace."
+        explanation: "Correct. An Issuer is namespaced and serves only its own namespace. The Certificate becomes Ready once it exists."
+      - id: c
+        text: "Create an Issuer named `outpost-issuer` in `cert-manager`."
+        explanation: "An Issuer in another namespace is not found by a Certificate in `outpost`."
+      - id: d
+        text: "Delete the Secret that the Certificate names."
+        explanation: "The Secret does not exist yet, and deleting it changes nothing."
+    correct_option: b
+    explanation: "An Issuer must live in the namespace of the Certificate that uses it."
+
+  - id: ats080-040-q10
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Judge the blast radius of an operator"
+    source_readings:
+      - sections/section-040/module-02/course-03-upgrades-and-blast-radius.md
+    prompt: "A security review of cert-manager finds a ClusterRole that allows `get`, `list`, `update` and `delete` on Secrets, bound to the controller service account. What does this mean in practice?"
+    options:
+      - id: a
+        text: "The controller can read and replace Secrets in every namespace if it fails or is compromised."
+        explanation: "Correct. A ClusterRole with a ClusterRoleBinding is cluster-wide, so the namespace of a Certificate does not limit the controller's access."
+      - id: b
+        text: "The controller can touch only Secrets in the `cert-manager` namespace."
+        explanation: "That would be the case with a Role and RoleBinding in that namespace, not here."
+      - id: c
+        text: "The controller can create pods and run code on nodes."
+        explanation: "The role lists Secrets only. `auth can-i create pods` returns no."
+      - id: d
+        text: "The rule has no effect without a Certificate."
+        explanation: "RBAC grants the permission at all times. A Certificate only triggers its use."
+    correct_option: a
+    explanation: "A ClusterRole bound cluster-wide grants access in all namespaces."
+
+  - id: ats080-040-q11
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Predict behavior when the webhook is down"
+    source_readings:
+      - sections/section-040/module-02/course-04-leader-election-and-operator-down.md
+    prompt: "The cert-manager webhook has `failurePolicy: Fail`, and its Deployment is scaled to zero. A pipeline applies a ConfigMap and updates a Certificate. What happens?"
+    options:
+      - id: a
+        text: "Both succeed, because webhooks are optional."
+        explanation: "Optional would mean a failure policy of Ignore. This one is Fail."
+      - id: b
+        text: "Both fail, because every request goes through the webhook."
+        explanation: "The webhook rules match only cert-manager resources. The ConfigMap does not call it."
+      - id: c
+        text: "The ConfigMap succeeds, and the Certificate update is rejected."
+        explanation: "Correct. Only requests that match the rules call the webhook, and with Fail an unreachable webhook rejects them."
+      - id: d
+        text: "The Certificate update succeeds, and the ConfigMap fails."
+        explanation: "The matching is the other way around."
+    correct_option: c
+    explanation: "failurePolicy Fail rejects matching requests when the webhook is unreachable, and other resources are unaffected."
+
+  - id: ats080-040-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Plan a CRD upgrade"
+    source_readings:
+      - sections/section-040/module-02/course-03-upgrades-and-blast-radius.md
+    prompt: "An upgrade of an operator adds a field to its CRD. The team upgrades only the controller image first. What is the risk?"
+    options:
+      - id: a
+        text: "The old CRD schema prunes the new field, so users' values are silently dropped."
+        explanation: "Correct. The API server prunes unknown fields in a structural schema, and the new controller never sees the value."
+      - id: b
+        text: "The API server refuses to start."
+        explanation: "The API server does not depend on a custom controller image."
+      - id: c
+        text: "The CRD is deleted automatically."
+        explanation: "An image change never deletes a CRD."
+      - id: d
+        text: "All stored objects are converted twice."
+        explanation: "Conversion happens only between versions, and no version changed."
+    correct_option: a
+    explanation: "Upgrade the CRD with the controller, because the old schema prunes new fields."

@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Capstone: Repair A Broken Operator Integration (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-capstone-040
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - quay.io/jetstack/cert-manager-controller:v1.21.3
+      - quay.io/jetstack/cert-manager-cainjector:v1.21.3
+      - quay.io/jetstack/cert-manager-webhook:v1.21.3
+      - ghcr.io/stefanprodan/podinfo:6.15.0
+
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: "Install cert-manager v1.21.3, scale its controller to zero and create the broken probe integration"
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: operator-running
+      description: The three cert-manager Deployments run, the six CRDs exist and the controller holds its lease
+      type: file
+      source: validation/validate-operator-running.sh
+      hint: The controller was scaled down. Check the Deployments in the namespace cert-manager and scale cert-manager back to one replica.
+    - name: issuer-ready
+      description: A selfSigned ClusterIssuer named starfleet-ca exists and is Ready
+      type: file
+      source: validation/validate-issuer-ready.sh
+      hint: Read the Ready condition of probe-cert. The issuerRef points to a ClusterIssuer, which is not namespaced.
+    - name: certificate-ready
+      description: probe-cert is Ready, uses starfleet-ca, and covers both DNS names in the Secret probe-tls
+      type: file
+      source: validation/validate-certificate-ready.sh
+      hint: Add the name probe.starfleet.svc.cluster.local to dnsNames and keep the existing name. A change of the spec issues the certificate again.
+    - name: probe-running
+      description: Deployment probe runs and mounts the Secret probe-tls at /etc/probe/tls
+      type: file
+      source: validation/validate-probe-running.sh
+      hint: Describe the pod of probe. The volume tls names a Secret that does not exist. Fix the name in the Deployment, not the Secret.
+    - name: no-cluster-admin
+      description: The service account probe has no cluster-admin binding and cannot read Secrets cluster-wide
+      type: file
+      source: validation/validate-no-cluster-admin.sh
+      hint: List ClusterRoleBindings that refer to the service account probe. Remove the binding, and keep the service account.
+
+teardown:
+  keepCluster: false

@@ -2,7 +2,7 @@
 
 Authors map sections to the official Certified Cloud Native Platform Engineering Associate (CNPA) objectives and check mechanisms against primary documentation. They review examples for responsible components, prerequisites and meaningful failure cases.
 
-Structural checks verify reading order, section introductions, closing summaries, draft metadata and YAML question contracts. No runtime execution or laboratory validation is claimed.
+Structural checks verify reading order, section introductions, closing summaries, draft metadata and YAML question contracts. Labs and playgrounds are checked statically (`astrona validate`, shell syntax and YAML parsing) and are untested until a maintainer runs them.
 
 The [contributors](https://github.com/astrona-io/ATS080/graphs/contributors) maintain the material. To [report a mistake](https://github.com/astrona-io/ATS080/issues), identify the page and disputed statement. The [license](https://github.com/astrona-io/ATS080/blob/main/LICENSE) governs reuse.
 

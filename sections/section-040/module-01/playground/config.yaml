@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# The Operator Pattern: CRD Plus Controller (PLAYGROUND) — playground environment.
+# A clean sandbox: three empty namespaces and nothing else. The learner writes
+# the CRD, the RBAC and the operator.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-playground-040-01
+  docs:
+    guide: docs/overview.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - alpine/k8s:1.35.8
+
+bootstrap:
+  init:
+    - name: prepare
+      description: "Create the namespaces starfleet, beacon-system and beacon-registry"
+      type: file
+      source: bootstrap/prepare.sh
+
+teardown:
+  keepCluster: false

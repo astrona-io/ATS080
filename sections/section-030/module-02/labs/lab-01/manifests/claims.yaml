@@ -1,0 +1,15 @@
+apiVersion: platform.starfleet.example/v1alpha1
+kind: Outpost
+metadata:
+  name: scout
+  namespace: starfleet
+spec:
+  replicas: 1
+---
+apiVersion: platform.starfleet.example/v1alpha1
+kind: Outpost
+metadata:
+  name: probe
+  namespace: starfleet
+spec:
+  replicas: 1

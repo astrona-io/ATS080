@@ -1,0 +1,244 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: environments.platform.example
+spec:
+  group: platform.example
+  scope: Namespaced
+  names:
+    kind: Environment
+    listKind: EnvironmentList
+    plural: environments
+    singular: environment
+    shortNames:
+      - env
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Tier
+          type: string
+          jsonPath: .spec.tier
+        - name: Owner
+          type: string
+          jsonPath: .spec.owner
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              description: The environment a team asks for.
+              required:
+                - tier
+                - owner
+              x-kubernetes-validations:
+                - rule: "self.tier != 'prod' || self.replicas >= 2"
+                  message: "tier prod requires at least 2 replicas"
+                  fieldPath: ".replicas"
+              properties:
+                tier:
+                  type: string
+                  description: Tier of the environment.
+                  enum:
+                    - dev
+                    - staging
+                    - prod
+                owner:
+                  type: string
+                  description: Owning team. Cannot be changed after creation.
+                  pattern: '^[a-z0-9-]{3,30}$'
+                  x-kubernetes-validations:
+                    - rule: "self == oldSelf"
+                      message: "owner cannot change after the environment is created"
+                replicas:
+                  type: integer
+                  description: Number of replicas.
+                  minimum: 1
+                  maximum: 10
+                  default: 1
+                region:
+                  type: string
+                  description: Region of the environment.
+                  enum:
+                    - eu-north
+                    - eu-west
+                  default: eu-north
+                ttlDays:
+                  type: integer
+                  description: Days before the environment is removed.
+                  minimum: 1
+                  maximum: 90
+                  default: 14
+            status:
+              type: object
+              description: Observed state, written by the platform controller.
+              properties:
+                phase:
+                  type: string
+                observedGeneration:
+                  type: integer
+                  format: int64
+                conditions:
+                  type: array
+                  x-kubernetes-list-type: map
+                  x-kubernetes-list-map-keys:
+                    - type
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                        maxLength: 316
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                      reason:
+                        type: string
+                        maxLength: 1024
+                      message:
+                        type: string
+                        maxLength: 32768
+                      observedGeneration:
+                        type: integer
+                        format: int64
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: environment-editor
+  namespace: starfleet
+rules:
+  - apiGroups: ["platform.example"]
+    resources: ["environments"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: environment-editor
+  namespace: starfleet
+subjects:
+  - kind: Group
+    name: team-starfleet
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: environment-editor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: environment-editor
+  namespace: outpost
+rules:
+  - apiGroups: ["platform.example"]
+    resources: ["environments"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: environment-editor
+  namespace: outpost
+subjects:
+  - kind: Group
+    name: team-outpost
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: environment-editor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: environment-viewer
+  namespace: starfleet
+rules:
+  - apiGroups: ["platform.example"]
+    resources: ["environments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: environment-viewer
+  namespace: starfleet
+subjects:
+  - kind: Group
+    name: auditors
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: environment-viewer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: environment-viewer
+  namespace: outpost
+rules:
+  - apiGroups: ["platform.example"]
+    resources: ["environments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: environment-viewer
+  namespace: outpost
+subjects:
+  - kind: Group
+    name: auditors
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: environment-viewer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: environment-prod-namespaces
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["platform.example"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["environments"]
+  validations:
+    - expression: "object.spec.tier != 'prod' || (has(namespaceObject.metadata.labels) && 'platform.example/prod-allowed' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['platform.example/prod-allowed'] == 'true')"
+      message: "prod environments are allowed only in namespaces labeled platform.example/prod-allowed=true"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: environment-prod-namespaces
+spec:
+  policyName: environment-prod-namespaces
+  validationActions: ["Deny"]

@@ -1,0 +1,300 @@
+# Knowledge check for section 020. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats080-020
+course_id: ATS080
+exam_code: CNPA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-020
+  title: "APIs for Self-Service Platforms (CRDs)"
+questions:
+  - id: ats080-020-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Name the rule for a CRD name and relate it to group and plural"
+    source_readings:
+      - sections/section-020/module-01/course-01-crd-anatomy-and-scope.md
+    prompt: |-
+      A platform team wants the kind `DatabaseClaim` in the group `platform.example` with the plural `databaseclaims`. The CRD is applied with `metadata.name: databaseclaim.platform.example`. What does the API server do?
+    options:
+      - id: a
+        text: "It accepts the CRD and corrects the name to the plural form."
+        explanation: "The API server never rewrites a name. It validates the name and rejects a wrong one."
+      - id: b
+        text: "It rejects the CRD, because a group may not contain a dot."
+        explanation: "A group is normally a domain name with dots. The dot is not the problem."
+      - id: c
+        text: "It accepts the CRD, because the name only has to contain the group."
+        explanation: "The name has a fixed form. A name that does not match the form is rejected."
+      - id: d
+        text: "It rejects the CRD, because the name must be `<plural>.<group>`, here `databaseclaims.platform.example`."
+        explanation: "Correct. The API server requires the CRD name to be the plural resource name, a dot and the group."
+    correct_option: d
+    explanation: "The name of a CRD must be `<plural>.<group>`."
+
+  - id: ats080-020-q02
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Choose between namespaced and cluster scope for a tenant API"
+    source_readings:
+      - sections/section-020/module-01/course-01-crd-anatomy-and-scope.md
+    prompt: |-
+      Teams in `starfleet` and `outpost` each create their own database claims, and each team must be able to receive permissions for only its own namespace. Which CRD scope fits?
+    options:
+      - id: a
+        text: "`Namespaced`, but only after every team has its own cluster."
+        explanation: "Scope does not need separate clusters. Namespaces are the boundary."
+      - id: b
+        text: "`Cluster`, because one claim name is easier to manage."
+        explanation: "A cluster-scoped object has no namespace, so a Role in one namespace cannot grant access to it."
+      - id: c
+        text: "`Namespaced`, so each claim lives in a namespace and a Role and RoleBinding can limit a team to its own namespace."
+        explanation: "Correct. Namespaced objects follow namespace boundaries for RBAC, quota and deletion."
+      - id: d
+        text: "Either scope, because RBAC ignores the scope of a CRD."
+        explanation: "RBAC depends on scope. A Role covers only namespaced resources of its own namespace."
+    correct_option: c
+    explanation: "Use namespaced scope for tenant-owned objects, so that a Role limits a team to its namespace."
+
+  - id: ats080-020-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain structural schemas, pruning and defaulting"
+    source_readings:
+      - sections/section-020/module-01/course-02-schemas-required-enums-and-defaults.md
+    prompt: |-
+      A tenant applies a `DatabaseClaim` with `spec.engine: postgres` and a typing mistake `spec.storageGb: 20`. The schema defines `storageGB` with the default `10` and has no `x-kubernetes-preserve-unknown-fields`. What is stored?
+    options:
+      - id: a
+        text: "The request is rejected for every unknown field."
+        explanation: "Pruning is the default. Unknown fields are dropped without an error, unless you validate strictly on the client."
+      - id: b
+        text: "The object with `storageGb` dropped and `storageGB: 10` set by the default."
+        explanation: "Correct. The API server prunes the unknown field and applies the default to the missing one. The tenant gets 10 and no error."
+      - id: c
+        text: "The object with both fields, because defaults copy similar names."
+        explanation: "Defaulting never copies another field. It sets only the declared default."
+      - id: d
+        text: "The object with `storageGb: 20` and `storageGB` absent."
+        explanation: "Unknown fields are not kept in a structural schema without the preserve setting."
+    correct_option: b
+    explanation: "Pruning drops unknown fields silently and defaults fill the missing declared ones."
+
+  - id: ats080-020-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use enum, minimum and maximum to reject bad input"
+    source_readings:
+      - sections/section-020/module-01/course-02-schemas-required-enums-and-defaults.md
+    prompt: |-
+      A schema sets `engine` to `enum: [postgres, mysql]` and `storageGB` to `minimum: 1`, `maximum: 500`. Which request is rejected?
+    options:
+      - id: a
+        text: "`engine: oracle`, `storageGB: 20`."
+        explanation: "Correct. `oracle` is not in the enumeration, so the schema check fails before any CEL rule."
+      - id: b
+        text: "`engine: postgres`, `storageGB: 1`."
+        explanation: "One is the minimum and is allowed."
+      - id: c
+        text: "`engine: mysql`, `storageGB: 500`."
+        explanation: "Both values are inside the allowed set and range, since the maximum is inclusive."
+      - id: d
+        text: "`engine: postgres` and no `storageGB`."
+        explanation: "The field is optional and has a default, so the request passes."
+    correct_option: a
+    explanation: "Schema keywords such as `enum` and `maximum` reject values outside the allowed set."
+
+  - id: ats080-020-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Write a CEL rule for a cross-field constraint"
+    source_readings:
+      - sections/section-020/module-01/course-03-cel-validation-rules.md
+    prompt: |-
+      A platform rule says: a claim with `environment: prod` needs `highAvailability: true`. Which `x-kubernetes-validations` rule on the `spec` node expresses it?
+    options:
+      - id: a
+        text: "`oldSelf.environment != 'prod' || oldSelf.highAvailability`"
+        explanation: "`oldSelf` is the stored object and does not exist on create. The rule must read the new value with `self`."
+      - id: b
+        text: "`self.highAvailability`"
+        explanation: "This requires high availability for every claim and ignores the environment."
+      - id: c
+        text: "`self.environment == 'prod' && self.highAvailability`"
+        explanation: "This rule also rejects every dev claim, because it requires prod for all objects."
+      - id: d
+        text: "`self.environment != 'prod' || self.highAvailability`"
+        explanation: "Correct. The rule is true for every non-prod claim and for a prod claim only when `highAvailability` is true."
+    correct_option: d
+    explanation: "Write the rule as an implication: it holds unless the condition applies and the requirement is missing."
+
+  - id: ats080-020-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use a transition rule with oldSelf"
+    source_readings:
+      - sections/section-020/module-01/course-03-cel-validation-rules.md
+    prompt: |-
+      Which rule on the node `spec.engine` stops a tenant from changing the engine of an existing claim, while a create is still allowed?
+    options:
+      - id: a
+        text: "`self in ['postgres','mysql']`"
+        explanation: "This only checks the allowed set. It does not stop a change from one allowed value to another."
+      - id: b
+        text: "`has(oldSelf)`"
+        explanation: "This checks whether a stored value exists. It does not compare values."
+      - id: c
+        text: "`self == oldSelf`"
+        explanation: "Correct. It compares the new value with the stored value. A transition rule that uses `oldSelf` runs only on update, so create passes."
+      - id: d
+        text: "`self != oldSelf`"
+        explanation: "This rule requires the value to change on every update."
+    correct_option: c
+    explanation: "Transition rules compare `self` with `oldSelf` and run only on update."
+
+  - id: ats080-020-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain what the status subresource changes"
+    source_readings:
+      - sections/section-020/module-01/course-04-printer-columns-status-and-explain.md
+    prompt: |-
+      A CRD enables `subresources.status`. A tenant runs `kubectl patch dbc scout-db --type=merge -p '{"status":{"phase":"Ready"}}'` through the main endpoint. What happens to `status.phase`?
+    options:
+      - id: a
+        text: "It becomes `Ready`, because the patch is valid."
+        explanation: "With the subresource enabled, the main endpoint ignores changes to `status`."
+      - id: b
+        text: "The API server ignores the status part of the request, and only the `/status` endpoint can write it."
+        explanation: "Correct. The main endpoint drops `status` and the `/status` endpoint ignores `spec`, so RBAC can grant them separately."
+      - id: c
+        text: "The request is rejected with a forbidden error."
+        explanation: "The API server does not reject the request. It drops the status part and handles the rest."
+      - id: d
+        text: "It becomes `Ready` and `metadata.generation` rises."
+        explanation: "Even a successful status write does not raise `generation`. Only spec changes do."
+    correct_option: b
+    explanation: "The status subresource separates who writes spec and who writes status."
+
+  - id: ats080-020-q08
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Read a version setup with served and stored versions"
+    source_readings:
+      - sections/section-020/module-02/course-01-versions-deprecation-and-conversion.md
+    prompt: |-
+      A CRD has `v1alpha1` (served, `storage: true`) and `v1beta1` (served, `storage: false`). A client reads an object through `v1beta1`. Which statement is true?
+    options:
+      - id: a
+        text: "The API server converts the stored object to `v1beta1` for the response. With strategy `None` it only changes `apiVersion`."
+        explanation: "Correct. There is one object in etcd. The API server presents it in the requested version."
+      - id: b
+        text: "The API server returns the object unchanged, with `apiVersion: platform.example/v1alpha1`."
+        explanation: "The response uses the requested version in `apiVersion`."
+      - id: c
+        text: "The API server needs a conversion webhook for every read through a second version."
+        explanation: "A webhook is needed only for incompatible schemas. `None` works for compatible versions."
+      - id: d
+        text: "The API server returns an error, because the object was written as `v1alpha1`."
+        explanation: "A served version can read any object of the kind. The API server converts it."
+    correct_option: a
+    explanation: "Reads in any served version are converted from the storage version."
+
+  - id: ats080-020-q09
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Choose the safe order for retiring a CRD version"
+    source_readings:
+      - sections/section-020/module-02/course-01-versions-deprecation-and-conversion.md
+    prompt: |-
+      The platform team moved the storage version to `v1beta1`. Some `DatabaseClaim` objects were written earlier and were never updated. Which step is safe before removing `v1alpha1` from `status.storedVersions`?
+    options:
+      - id: a
+        text: "Delete the `deprecationWarning` field, so that tenants stop using `v1alpha1`."
+        explanation: "The warning helps tenants move. Removing it does not change what is stored."
+      - id: b
+        text: "Wait for the API server to remove `v1alpha1` from `storedVersions` by itself."
+        explanation: "The API server adds versions to `storedVersions` and does not remove them."
+      - id: c
+        text: "Mark `v1alpha1` as `served: false` and remove it at once."
+        explanation: "Objects may still be in the old form in etcd. Removing the version too early leaves unreadable objects."
+      - id: d
+        text: "Rewrite every object (for example with a read and replace of all claims), so that etcd holds only `v1beta1`, and then remove the old version from `storedVersions`."
+        explanation: "Correct. Rewriting stores each object in the new storage version, so the old entry is no longer needed."
+    correct_option: d
+    explanation: "Rewrite stored objects before you drop a version from `storedVersions`."
+
+  - id: ats080-020-q10
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use observedGeneration to judge whether a condition is current"
+    source_readings:
+      - sections/section-020/module-02/course-02-status-conditions-as-a-contract.md
+    prompt: |-
+      A claim shows `metadata.generation: 3`. Its `Ready` condition has `status: "True"` and `observedGeneration: 2`. What should a pipeline conclude?
+    options:
+      - id: a
+        text: "`Ready` is `\"False\"` whenever the two numbers differ."
+        explanation: "The value stays what the controller wrote. The reader compares the numbers."
+      - id: b
+        text: "The database is ready for the current spec."
+        explanation: "The condition describes generation 2, and the spec changed after that."
+      - id: c
+        text: "The condition describes an older spec, so the pipeline should not treat the claim as ready yet."
+        explanation: "Correct. A condition is current only when its `observedGeneration` equals `metadata.generation`."
+      - id: d
+        text: "The condition is invalid and the API server rejects it."
+        explanation: "The API server accepts the condition. The mismatch is a signal for readers, not a validation error."
+    correct_option: c
+    explanation: "Trust a condition only when `observedGeneration` equals `metadata.generation`."
+
+  - id: ats080-020-q11
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Choose the right control for a rule on namespace labels"
+    source_readings:
+      - sections/section-020/module-02/course-03-tenant-rbac-and-admission-limits.md
+    prompt: |-
+      The platform team wants `tier: prod` environments only in namespaces with the label `platform.example/prod-allowed=true`. Which mechanism can enforce this without a controller?
+    options:
+      - id: a
+        text: "A Role that lists `prod` in `resourceNames`."
+        explanation: "RBAC decides on verb, resource, namespace and name. It never reads the content of the object."
+      - id: b
+        text: "A ValidatingAdmissionPolicy with a binding that uses `Deny`, with an expression that reads `namespaceObject`."
+        explanation: "Correct. The policy can read the object and the namespace. It does nothing until a binding connects it."
+      - id: c
+        text: "The default value of `tier`."
+        explanation: "A default fills a missing field. It does not reject any request."
+      - id: d
+        text: "A CEL rule in the CRD on `spec`."
+        explanation: "A CRD rule sees only `self` and `oldSelf`. It cannot read namespace labels."
+    correct_option: b
+    explanation: "A ValidatingAdmissionPolicy reads `namespaceObject`. It needs a binding."
+
+  - id: ats080-020-q12
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Explain what a CRD alone does"
+    source_readings:
+      - sections/section-020/module-02/course-03-tenant-rbac-and-admission-limits.md
+    prompt: |-
+      A team applies a `DatabaseClaim` and waits. After an hour no database exists and the status is empty. The CRD, the schema and the RBAC rules are correct. What is missing?
+    options:
+      - id: a
+        text: "A controller that watches claims, builds the database and writes the status."
+        explanation: "Correct. A CRD adds an API and storage. A controller acts on the objects."
+      - id: b
+        text: "The label `platform.example/prod-allowed` on the namespace."
+        explanation: "The label is used only by the admission policy example. It creates nothing."
+      - id: c
+        text: "A second storage version."
+        explanation: "Versions control how objects are stored and served, not what happens after creation."
+      - id: d
+        text: "A larger schema with more fields."
+        explanation: "The schema only validates input. It cannot create a database."
+    correct_option: a
+    explanation: "A CRD adds an API, not behavior. A controller supplies the behavior."

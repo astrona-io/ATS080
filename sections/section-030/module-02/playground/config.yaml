@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Providers, Identities, Connection Secrets And Deletion (PLAYGROUND) - playground environment.
+# A clean sandbox: Crossplane 2.4.3, provider-kubernetes v1.4.1 and
+# function-patch-and-transform v0.11.2 on kind. No cloud account is needed:
+# the external resources are Kubernetes objects. No task, no grading.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-playground-030-02
+  docs:
+    guide: docs/overview.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - ghcr.io/stefanprodan/podinfo:6.15.0
+      - curlimages/curl:8.22.0
+
+# Starting state: a finished claim API (XRD and Composition) and two Outpost claims, scout and probe. The provider identity can manage namespaces, configmaps and services but not Deployments, so both claims are partly failing.
+bootstrap:
+  init:
+    - name: prepare
+      description: "Install Crossplane 2.4.3, provider-kubernetes v1.4.1 and function-patch-and-transform v0.11.2"
+      type: file
+      source: bootstrap/prepare.sh
+
+teardown:
+  keepCluster: false

@@ -1,0 +1,11 @@
+# Starting state of the CRD playground: two tenant namespaces and nothing else.
+# No CRD, no custom resource and no controller exist yet.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost

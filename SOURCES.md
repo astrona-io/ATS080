@@ -1,6 +1,6 @@
 # Primary Authoring Sources
 
-[Official CNPA objectives](https://training.linuxfoundation.org/certification/certified-cloud-native-platform-engineering-associate-cnpa/) checked on 2026-10-11. The examination is multiple-choice. These primary references support author review; learner pages are self-contained. Adaptation paths are recorded per reading in AUTHORING.yaml. No runtime or command-output validation is claimed.
+[Official CNPA objectives](https://training.linuxfoundation.org/certification/certified-cloud-native-platform-engineering-associate-cnpa/) checked on 2026-10-11. The examination is multiple-choice. These primary references support author review; learner pages are self-contained. Adaptation paths are recorded per reading in AUTHORING.yaml. Labs and playgrounds are untested: no command output has been validated on a cluster.
 
 - [Platform capabilities and user outcomes](https://tag-app-delivery.cncf.io/whitepapers/platforms/)
 - [Platform maturity](https://tag-app-delivery.cncf.io/whitepapers/platform-eng-maturity-model/)

@@ -1,0 +1,243 @@
+# Knowledge check for section 030. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats080-030
+course_id: ATS080
+exam_code: CNPA
+status: draft
+provenance: Original practice material written for this course; not official exam questions.
+scope:
+  type: section
+  id: section-030
+  title: "Infrastructure Provisioning with Kubernetes"
+questions:
+  - id: ats080-030-q01
+    type: single_choice
+    difficulty: beginner
+    learning_objective: "Explain why developers create a claim and not a composite resource"
+    source_readings:
+      - sections/section-030/module-01/course-01-claims-composite-resources-and-xrds.md
+    prompt: "A platform team wants developers of one team to request an outpost without any access to cluster-level objects. Which object should the developers create?"
+    options:
+      - id: a
+        text: "A composite resource of the kind `XOutpost`."
+        explanation: "A composite resource is cluster-scoped. Giving access to it gives access to cluster-level objects."
+      - id: b
+        text: "A claim of the kind `Outpost` in the namespace of the team."
+        explanation: "Correct. A claim is namespaced and has the same schema as the composite resource, so ordinary namespace access control decides who may request one."
+      - id: c
+        text: "A Composition that names the outpost."
+        explanation: "A Composition is the recipe, owned by the platform team. It does not request anything."
+      - id: d
+        text: "A provider-kubernetes `Object` in `crossplane-system`."
+        explanation: "An Object is a composed resource. Creating it directly skips the API and the schema."
+    correct_option: b
+    explanation: "The claim is the namespaced request. The composite resource and the composed resources are reconciled by Crossplane."
+
+  - id: ats080-030-q02
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Predict which APIs an XRD creates"
+    source_readings:
+      - sections/section-030/module-01/course-01-claims-composite-resources-and-xrds.md
+    prompt: "A platform team applies an XRD that defines the composite kind `XOutpost` but has no `claimNames` section. What is the result?"
+    options:
+      - id: a
+        text: "Only the composite resource API exists, so a developer cannot create a namespaced `Outpost`."
+        explanation: "Correct. `claimNames` is what generates the claim API. Without it there is only the cluster-scoped composite kind."
+      - id: b
+        text: "Crossplane creates a claim kind with the name `Xoutpost` by default."
+        explanation: "Crossplane never invents a claim kind. The name must be given."
+      - id: c
+        text: "The XRD is rejected, because a claim is required."
+        explanation: "A claim is optional. The XRD is valid and the composite resource API is created."
+      - id: d
+        text: "The API server creates claims from the composite resources."
+        explanation: "The API server only stores objects. It does not create objects from other objects."
+    correct_option: a
+    explanation: "One XRD generates the composite resource API and, only with `claimNames`, the claim API."
+
+  - id: ats080-030-q03
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose between Compositions for a claim"
+    source_readings:
+      - sections/section-030/module-01/course-02-compositions-and-function-pipelines.md
+    prompt: "Two Compositions exist for the kind `XOutpost`: `outpost-small` and `outpost-large`. The XRD sets no default and a developer creates a claim that names neither. The claim never becomes ready. What is the best fix for the platform team?"
+    options:
+      - id: a
+        text: "Delete one of the two Compositions."
+        explanation: "This works, but it removes an option that other teams may use. A default or an explicit choice keeps both."
+      - id: b
+        text: "Set `defaultCompositionRef` in the XRD, or let the claim name a Composition with `compositionRef`."
+        explanation: "Correct. Crossplane needs one Composition. A default in the XRD or a choice in the claim provides it."
+      - id: c
+        text: "Increase `spec.replicas` in the claim."
+        explanation: "Replicas does not influence which Composition is selected."
+      - id: d
+        text: "Give the provider service account more permissions."
+        explanation: "Permissions are checked later, when composed resources are created. No Composition was selected yet."
+    correct_option: b
+    explanation: "A claim needs exactly one Composition, chosen by default reference, by name or by selector."
+
+  - id: ats080-030-q04
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Use the required patch policy"
+    source_readings:
+      - sections/section-030/module-01/course-02-compositions-and-function-pipelines.md
+    prompt: "A patch copies `metadata.labels[crossplane.io/claim-name]` into the name of a namespace. A composite resource was created without that label. With `policy.fromFieldPath: Required`, what happens?"
+    options:
+      - id: a
+        text: "The patch is skipped and the namespace is named `placeholder`."
+        explanation: "This is the behavior without the policy. With Required it is not allowed."
+      - id: b
+        text: "The function reports an error and the composite resource shows it in its `Synced` condition."
+        explanation: "Correct. Required turns a missing source field into an error, so a wrong value is never applied."
+      - id: c
+        text: "Crossplane adds the label by itself and retries."
+        explanation: "Crossplane does not invent a value for a missing source field."
+      - id: d
+        text: "The provider creates the namespace with the name of the composite resource."
+        explanation: "The provider only creates what the function returns, and the function returned an error."
+    correct_option: b
+    explanation: "Required makes a missing source field an error, and an error is better than a resource with a placeholder name."
+
+  - id: ats080-030-q05
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Choose a readiness policy for a Deployment Object"
+    source_readings:
+      - sections/section-030/module-01/course-02-compositions-and-function-pipelines.md
+    prompt: "A claim reports `Ready` almost at once, but the pods of the Deployment it composes are still pulling their image. The Deployment is wrapped in a provider-kubernetes `Object` with default settings. What should the Composition set?"
+    options:
+      - id: a
+        text: "`readiness.policy: AllTrue` on the Object."
+        explanation: "Correct. The Object is then ready only when every condition of the wrapped Deployment is true, including `Available`."
+      - id: b
+        text: "`deletionPolicy: Orphan` on the Object."
+        explanation: "This changes what happens on deletion. It has no influence on readiness."
+      - id: c
+        text: "`managementPolicies: [\"Observe\"]` on the Object."
+        explanation: "This stops the provider from creating the Deployment at all."
+      - id: d
+        text: "A longer `compositeDeletePolicy` on the claim."
+        explanation: "That setting applies when the claim is deleted."
+    correct_option: a
+    explanation: "The default readiness of an Object is satisfied when the object is created, so a Deployment needs a policy that looks at its conditions."
+
+  - id: ats080-030-q06
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Find a failure from the claim downward"
+    source_readings:
+      - sections/section-030/module-01/course-03-following-a-claim-through-reconciliation.md
+    prompt: "A claim shows `Ready` equal to `False`. Which approach finds the cause fastest?"
+    options:
+      - id: a
+        text: "Delete the claim and create it again until it works."
+        explanation: "Recreating hides the cause and loses the evidence. The same problem will come back."
+      - id: b
+        text: "Read the conditions from the claim to the composite resource to the composed Objects and read the message of the first one with `Synced` equal to `False`."
+        explanation: "Correct. Each object reports its own state, and the first failing object names the cause."
+      - id: c
+        text: "Restart the Crossplane pod."
+        explanation: "A restart does not fix a missing permission or a wrong patch, and it removes the logs that would explain the problem."
+      - id: d
+        text: "Edit the composed Objects by hand until they are ready."
+        explanation: "Crossplane reverts hand edits, and the claim would still be wrong."
+    correct_option: b
+    explanation: "Conditions are reported on every object in the chain, so the first not-synced object is the place to read."
+
+  - id: ats080-030-q07
+    type: single_choice
+    difficulty: intermediate
+    learning_objective: "Diagnose a missing permission of the provider"
+    source_readings:
+      - sections/section-030/module-02/course-01-providers-providerconfigs-and-identity.md
+    prompt: "The `deployment` Object of a claim shows `Synced` equal to `False` and a message that contains `forbidden` and the service account `provider-kubernetes`. The namespace Object of the same claim is synced. What is the correct fix?"
+    options:
+      - id: a
+        text: "Change the `ProviderConfig` to use another credentials source."
+        explanation: "The ProviderConfig chooses an identity. Permissions come from RBAC, so another source would not add them."
+      - id: b
+        text: "Bind a ClusterRole that allows Deployments in the `apps` group to the service account `provider-kubernetes`."
+        explanation: "Correct. The identity needs permission for the kind that the Composition wraps. The grant is as narrow as the need."
+      - id: c
+        text: "Edit the claim and lower `spec.replicas` to 1."
+        explanation: "The error is about creating a Deployment at all, not about how many."
+      - id: d
+        text: "Change the Deployment Object to `deletionPolicy: Orphan`."
+        explanation: "The deletion policy applies to deletion. The Deployment cannot be created at all."
+    correct_option: b
+    explanation: "The ProviderConfig picks the identity and RBAC grants what it may do. The fix is a ClusterRole and a binding."
+
+  - id: ats080-030-q08
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Trace a connection secret through its four hops"
+    source_readings:
+      - sections/section-030/module-02/course-02-connection-secrets-conditions-and-partial-failure.md
+    prompt: "A developer claim has `spec.writeConnectionSecretToRef.name: scout-conn`. The Composition passes the key `endpoint` and the composed Object writes it. The secret `scout-conn` is created, but it has no key `endpoint`. Which setting is the most likely cause?"
+    options:
+      - id: a
+        text: "The XRD does not list `endpoint` in `connectionSecretKeys`."
+        explanation: "Correct. The XRD filters the keys that may be published, and a key that is not listed is dropped."
+      - id: b
+        text: "The claim namespace has no ResourceQuota."
+        explanation: "A quota does not change the keys of a secret."
+      - id: c
+        text: "The provider package version is too old."
+        explanation: "A version problem would break the Object, not remove one key."
+      - id: d
+        text: "The ProviderConfig uses `InjectedIdentity`."
+        explanation: "The credentials source affects how the provider calls the API, not which keys a secret holds."
+    correct_option: a
+    explanation: "A connection detail needs a key at every hop: the composed Object, the Composition, the XRD and the claim."
+
+  - id: ats080-030-q09
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Read a partially failed claim"
+    source_readings:
+      - sections/section-030/module-02/course-02-connection-secrets-conditions-and-partial-failure.md
+    prompt: "A claim has four composed resources. The Deployment Object is not synced because of a permission error. What is the state of the other three?"
+    options:
+      - id: a
+        text: "Crossplane creates them, because it creates every composed resource it can and has no ordering."
+        explanation: "Correct. The claim is not ready, and the three resources exist and work. Fixing the permission completes the claim without recreating anything."
+      - id: b
+        text: "Crossplane deletes them, to keep the claim all-or-nothing."
+        explanation: "Crossplane does not roll back. It keeps retrying the failing resource."
+      - id: c
+        text: "Crossplane never creates them, because the first failure stops the pipeline."
+        explanation: "The pipeline produces desired resources. A failure of one Object during apply does not stop the others."
+      - id: d
+        text: "Crossplane creates them only after the Deployment exists."
+        explanation: "Composed resources have no ordering between them."
+    correct_option: a
+    explanation: "Partial failure is normal. The claim is not ready while the working parts exist."
+
+  - id: ats080-030-q10
+    type: single_choice
+    difficulty: advanced
+    learning_objective: "Keep one resource when a claim is deleted"
+    source_readings:
+      - sections/section-030/module-02/course-03-management-policies-and-deletion.md
+    prompt: "The platform team wants the record ConfigMap of an outpost to stay when the claim is deleted, while the namespace is removed. What must the Composition set?"
+    options:
+      - id: a
+        text: "`compositeDeletePolicy: Foreground` on the claim."
+        explanation: "Foreground makes the claim wait for the composed resources. It does not keep any of them."
+      - id: b
+        text: "`deletionPolicy: Orphan` on the `record` resource, and the change must reach the Object before the claim is deleted."
+        explanation: "Correct. Orphan removes the Crossplane object and leaves the wrapped ConfigMap. The other Objects keep the default and are removed."
+      - id: c
+        text: "`readiness.policy: AllTrue` on the `record` resource."
+        explanation: "Readiness does not influence deletion."
+      - id: d
+        text: "The annotation `crossplane.io/paused: \"true\"` on the claim."
+        explanation: "Pausing stops reconciliation. It does not decide what a deletion keeps."
+    correct_option: b
+    explanation: "The deletion policy of each Object decides whether the wrapped object is removed. Orphan keeps it."
+

@@ -1,0 +1,56 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: beacons.ops.starfleet.example
+spec:
+  group: ops.starfleet.example
+  scope: Namespaced
+  names:
+    kind: Beacon
+    listKind: BeaconList
+    plural: beacons
+    singular: beacon
+    shortNames:
+      - bcn
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Channel
+          type: string
+          jsonPath: .spec.channel
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: ["message"]
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                channel:
+                  type: string
+                  enum: ["routine", "alert"]
+                  default: "routine"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                observedGeneration:
+                  type: integer
+                  format: int64
+                configMapName:
+                  type: string

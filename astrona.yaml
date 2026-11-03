@@ -1,9 +1,8 @@
-# Reading-only content; YAML knowledge checks have a separate index.
+# Each module has a playground, a graded lab and each section ends with a capstone and a quiz. Labs and playgrounds are untested.
 training:
   id: ATS080
   title: 'CNPA: Platform APIs and Provisioning Infrastructure'
-  description: 'Detailed reading material and reusable YAML knowledge checks for CNPA: Platform APIs and
-    Provisioning Infrastructure. Technical content remains draft. No labs or playgrounds.'
+  description: Concept lessons, playgrounds, graded labs, capstones and original scenario quizzes covering every published objective in this CNPA domain. Labs run on kind (Kubernetes 1.35).
   certification:
     name: Certified Cloud Native Platform Engineering Associate
     code: CNPA
@@ -16,87 +15,479 @@ training:
     - Infrastructure Provisioning with Kubernetes
     - Kubernetes Operator Pattern for Integration
 modules:
-- id: module-intro
-  title: Introduction
-  description: Audience, reading method and review process.
-  content:
-  - type: reading
+  - id: module-intro
     title: Introduction
-    path: sections/intro/README.md
-  - type: reading
-    title: Welcome To The Course
-    path: sections/intro/course-01-welcome.md
-  - type: reading
-    title: Get Your Machine Ready
-    path: sections/intro/course-02-get-your-machine-ready.md
-  - type: reading
-    title: How This Course Is Made
-    path: sections/intro/course-03-how-this-course-is-made.md
-- id: module-010
-  title: Kubernetes Reconciliation Loop
-  description: Developed reading and reasoning for Kubernetes Reconciliation Loop.
-  maturity: alpha
-  content:
-  - type: reading
-    title: Kubernetes Reconciliation Loop
-    path: sections/section-010/README.md
-  - type: reading
-    title: Observe, Compare, Act And Report
-    path: sections/section-010/module-01/course.md
-  - type: reading
-    title: Observe, Compare, Act And Report
-    path: sections/section-010/module-01/course-01-observe-compare-act-and-report.md
-  - type: reading
-    title: Summary
-    path: sections/section-010/module-01/course-02-summary.md
-- id: module-020
-  title: APIs for Self-Service Platforms (CRDs)
-  description: Developed reading and reasoning for APIs for Self-Service Platforms (CRDs).
-  maturity: alpha
-  content:
-  - type: reading
-    title: APIs for Self-Service Platforms (CRDs)
-    path: sections/section-020/README.md
-  - type: reading
-    title: Custom Resource Schemas, Status And Self-Service Contracts
-    path: sections/section-020/module-01/course.md
-  - type: reading
-    title: Custom Resource Schemas, Status And Self-Service Contracts
-    path: sections/section-020/module-01/course-01-custom-resource-schemas-status-and-self-service-contracts.md
-  - type: reading
-    title: Summary
-    path: sections/section-020/module-01/course-02-summary.md
-- id: module-030
-  title: Infrastructure Provisioning with Kubernetes
-  description: Developed reading and reasoning for Infrastructure Provisioning with Kubernetes.
-  maturity: alpha
-  content:
-  - type: reading
-    title: Infrastructure Provisioning with Kubernetes
-    path: sections/section-030/README.md
-  - type: reading
-    title: Infrastructure Claims, Provider Identities And External Lifecycle
-    path: sections/section-030/module-01/course.md
-  - type: reading
-    title: Infrastructure Claims, Provider Identities And External Lifecycle
-    path: sections/section-030/module-01/course-01-infrastructure-claims-provider-identities-and-external-lifecycle.md
-  - type: reading
-    title: Summary
-    path: sections/section-030/module-01/course-02-summary.md
-- id: module-040
-  title: Kubernetes Operator Pattern for Integration
-  description: Developed reading and reasoning for Kubernetes Operator Pattern for Integration.
-  maturity: alpha
-  content:
-  - type: reading
-    title: Kubernetes Operator Pattern for Integration
-    path: sections/section-040/README.md
-  - type: reading
-    title: Domain Controllers, Integration And Repeated Safe Actions
-    path: sections/section-040/module-01/course.md
-  - type: reading
-    title: Domain Controllers, Integration And Repeated Safe Actions
-    path: sections/section-040/module-01/course-01-domain-controllers-integration-and-repeated-safe-actions.md
-  - type: reading
-    title: Summary
-    path: sections/section-040/module-01/course-02-summary.md
+    description: Audience, reading method and review process.
+    content:
+    - type: reading
+      title: Introduction
+      path: sections/intro/README.md
+    - type: reading
+      title: Welcome To The Course
+      path: sections/intro/course-01-welcome.md
+    - type: reading
+      title: Get Your Machine Ready
+      path: sections/intro/course-02-get-your-machine-ready.md
+    - type: reading
+      title: How This Course Is Made
+      path: sections/intro/course-03-how-this-course-is-made.md
+  - id: module-010
+    title: "Kubernetes Reconciliation Loop"
+    description: >
+      Makes the reader able to explain how Kubernetes controllers keep the
+      cluster at its desired state: the observe, compare, act and report
+      loop, spec and status, ownership from Deployment to Pod, watches and
+      level-triggered logic, drift correction and rollouts, conditions and
+      progress deadlines, events, finalizers and garbage collection, and
+      how to unblock a Deployment that cannot converge.
+
+    content:
+      - type: reading
+        title: "Section Overview"
+        path: sections/section-010/README.md
+
+      - type: reading
+        title: "Controllers, Desired State And The Control Loop"
+        path: sections/section-010/module-01/course.md
+      - type: reading
+        title: "Spec, Status And The Control Loop"
+        path: sections/section-010/module-01/course-01-spec-status-and-the-control-loop.md
+      - type: reading
+        title: "Ownership From Deployment To Pod"
+        path: sections/section-010/module-01/course-02-ownership-from-deployment-to-pod.md
+      - type: reading
+        title: "Watches And Level-Triggered Reconciliation"
+        path: sections/section-010/module-01/course-03-watches-and-level-triggered-reconciliation.md
+      - type: reading
+        title: "Question"
+        path: sections/section-010/module-01/labs/lab-01/question.md
+      - type: lab
+        title: "Scale A Deployment And Read The Ownership Chain Lab"
+        path: sections/section-010/module-01/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 20m
+        topic: kubernetes-controllers
+        task_kind: fix
+        tags: [reconciliation, deployment, replicaset, ownerreferences, observedgeneration, garbage-collection]
+        learning_goals:
+          - Scale a Deployment and let the controller create the missing pods
+          - Follow the owner chain from a pod to its Deployment and record the uids and generation
+          - Prove that the Deployment was changed in place and not created again
+        resources:
+          - name: "Kubernetes controllers"
+            url: https://kubernetes.io/docs/concepts/architecture/controller/
+          - name: "Owners and dependents"
+            url: https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/
+      - type: reading
+        title: "Summary"
+        path: sections/section-010/module-01/course-04-summary.md
+
+      - type: reading
+        title: "Convergence, Drift And Blocked Progress"
+        path: sections/section-010/module-02/course.md
+      - type: reading
+        title: "Drift Correction And Rollouts"
+        path: sections/section-010/module-02/course-01-drift-correction-and-rollouts.md
+      - type: reading
+        title: "Conditions And Progress Deadlines"
+        path: sections/section-010/module-02/course-02-conditions-and-progress-deadlines.md
+      - type: reading
+        title: "Reading Blocked Progress"
+        path: sections/section-010/module-02/course-03-reading-blocked-progress.md
+      - type: reading
+        title: "Question"
+        path: sections/section-010/module-02/labs/lab-01/question.md
+      - type: lab
+        title: "Fix Deployments That Cannot Converge Lab"
+        path: sections/section-010/module-02/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 30m
+        topic: kubernetes-controllers
+        task_kind: fix
+        tags: [reconciliation, progressdeadlineseconds, conditions, events, imagepullbackoff, unschedulable]
+        learning_goals:
+          - Record why two Deployments report Progressing false from their conditions, pods and events
+          - Fix a bad image and an impossible resource request in place
+          - Prove convergence with generation, observedGeneration and the Available and Progressing conditions
+        resources:
+          - name: "Deployments"
+            url: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+          - name: "Debug pods"
+            url: https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/
+      - type: reading
+        title: "Finalizers And Garbage Collection"
+        path: sections/section-010/module-02/course-04-finalizers-and-garbage-collection.md
+      - type: reading
+        title: "Summary"
+        path: sections/section-010/module-02/course-05-summary.md
+
+      - type: reading
+        title: "Question"
+        path: sections/section-010/capstone/labs/lab-01/question.md
+      - type: lab
+        title: "Reconciliation Loop Capstone Lab"
+        path: sections/section-010/capstone/labs/lab-01
+        difficulty: advanced
+        estimated_duration: 40m
+        topic: kubernetes-controllers
+        task_kind: fix
+        tags: [reconciliation, deployment, finalizer, ownerreferences, readiness-probe, imagepullbackoff, conditions]
+        learning_goals:
+          - Unblock a rollout with a bad image and a rollout with a failing readiness probe
+          - Release a ConfigMap whose deletion is held by a finalizer
+          - Create a dependent object with a live ownerReference and record the rollout revision
+        resources:
+          - name: "Deployments"
+            url: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+          - name: "Finalizers"
+            url: https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/
+          - name: "Garbage collection"
+            url: https://kubernetes.io/docs/concepts/architecture/garbage-collection/
+      - type: quiz
+        title: "Knowledge Check: Kubernetes Reconciliation Loop"
+        path: sections/section-010/quiz.yaml
+        pass_score: 70
+  - id: module-020
+    title: "APIs for Self-Service Platforms (CRDs)"
+    description: >
+      Makes the reader able to design a self-service platform API as a
+      CustomResourceDefinition: scope, structural schema with required
+      fields, enumerations and defaults, CEL validation rules, printer
+      columns and the status subresource, then served and stored versions,
+      deprecation, status conditions as a contract, tenant RBAC on custom
+      resources and the limits of ValidatingAdmissionPolicy, ending with one
+      complete API that has no controller.
+    status: alpha
+    content:
+      - type: reading
+        title: "APIs for Self-Service Platforms (CRDs)"
+        path: sections/section-020/README.md
+
+      - type: reading
+        title: "CRD Schemas And Validation"
+        path: sections/section-020/module-01/course.md
+      - type: reading
+        title: "CRD Anatomy And Scope"
+        path: sections/section-020/module-01/course-01-crd-anatomy-and-scope.md
+      - type: reading
+        title: "Schemas, Required Fields, Enumerations And Defaults"
+        path: sections/section-020/module-01/course-02-schemas-required-enums-and-defaults.md
+      - type: reading
+        title: "CEL Validation Rules"
+        path: sections/section-020/module-01/course-03-cel-validation-rules.md
+      - type: reading
+        title: "Printer Columns, Status And kubectl explain"
+        path: sections/section-020/module-01/course-04-printer-columns-status-and-explain.md
+      - type: reading
+        title: "Question"
+        path: sections/section-020/module-01/labs/lab-01/question.md
+      - type: lab
+        title: "CRD Schemas And Validation Lab"
+        path: sections/section-020/module-01/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 40m
+        topic: platform-apis
+        task_kind: build
+        tags: [crd, openapi-schema, defaults, cel, status-subresource, printer-columns]
+        learning_goals:
+          - Replace an open CRD schema with required fields, enumerations, limits and defaults
+          - Add CEL rules for a cross-field check and two transition rules
+          - Enable the status subresource and add printer columns
+        resources:
+          - name: "Extend the Kubernetes API with CustomResourceDefinitions"
+            url: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+          - name: "Validation rules for CRDs"
+            url: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-rules
+      - type: reading
+        title: "Summary"
+        path: sections/section-020/module-01/course-05-summary.md
+
+      - type: reading
+        title: "Versions, Status Contracts And Tenant Access"
+        path: sections/section-020/module-02/course.md
+      - type: reading
+        title: "Served And Stored Versions, Deprecation And Conversion"
+        path: sections/section-020/module-02/course-01-versions-deprecation-and-conversion.md
+      - type: reading
+        title: "Status Conditions As A Contract"
+        path: sections/section-020/module-02/course-02-status-conditions-as-a-contract.md
+      - type: reading
+        title: "Tenant RBAC, Admission Limits And Why A CRD Alone Does Nothing"
+        path: sections/section-020/module-02/course-03-tenant-rbac-and-admission-limits.md
+      - type: reading
+        title: "Question"
+        path: sections/section-020/module-02/labs/lab-01/question.md
+      - type: lab
+        title: "Versions, Status Condition And Tenant Access Lab"
+        path: sections/section-020/module-02/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 35m
+        topic: platform-apis
+        task_kind: fix
+        tags: [crd, versions, deprecation, status-conditions, rbac, auth-can-i]
+        learning_goals:
+          - Make v1beta1 the only storage version and deprecate v1alpha1 with a warning
+          - Grant least-privilege Roles and RoleBindings to an editor group and an auditor group
+          - Write a Ready condition through the status subresource with the current observedGeneration
+        resources:
+          - name: "Versions in CustomResourceDefinitions"
+            url: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/
+          - name: "Using RBAC Authorization"
+            url: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+      - type: reading
+        title: "Summary"
+        path: sections/section-020/module-02/course-04-summary.md
+
+      - type: reading
+        title: "Question"
+        path: sections/section-020/capstone/labs/lab-01/question.md
+      - type: lab
+        title: "Capstone: A Complete Self-Service API"
+        path: sections/section-020/capstone/labs/lab-01
+        difficulty: advanced
+        estimated_duration: 60m
+        topic: platform-apis
+        task_kind: build
+        tags: [crd, schema, cel, status-subresource, rbac, validating-admission-policy]
+        learning_goals:
+          - Define the Environment CRD with schema, defaults, CEL rules, status subresource and printer columns
+          - Give two tenant teams and an auditor group least-privilege access in their namespaces
+          - Restrict production environments to labeled namespaces with a ValidatingAdmissionPolicy
+        resources:
+          - name: "Validating Admission Policy"
+            url: https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/
+          - name: "Extend the Kubernetes API with CustomResourceDefinitions"
+            url: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+
+      - type: quiz
+        title: "Knowledge Check: APIs for Self-Service Platforms (CRDs)"
+        path: sections/section-020/quiz.yaml
+        pass_score: 70
+  - id: module-030
+    title: "Infrastructure Provisioning with Kubernetes"
+    description: >
+      Makes the reader able to offer infrastructure as a Kubernetes API
+      and to explain how a request becomes real resources: claims,
+      composite resource definitions and Compositions with a function
+      pipeline, providers with their ProviderConfig and identity,
+      connection secrets, Synced and Ready conditions, partial failure,
+      and what is kept or removed when a claim is deleted.
+
+    content:
+      - type: reading
+        title: "Section Overview"
+        path: sections/section-030/README.md
+
+      - type: reading
+        title: "Claims, XRDs And Compositions"
+        path: sections/section-030/module-01/course.md
+      - type: reading
+        title: "Claims, Composite Resources And XRDs"
+        path: sections/section-030/module-01/course-01-claims-composite-resources-and-xrds.md
+      - type: reading
+        title: "Compositions And Function Pipelines"
+        path: sections/section-030/module-01/course-02-compositions-and-function-pipelines.md
+      - type: reading
+        title: "Following A Claim Through Reconciliation"
+        path: sections/section-030/module-01/course-03-following-a-claim-through-reconciliation.md
+      - type: reading
+        title: "Question"
+        path: sections/section-030/module-01/labs/lab-01/question.md
+      - type: lab
+        title: "Claims, XRDs And Compositions Lab"
+        path: sections/section-030/module-01/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 30m
+        topic: crossplane
+        task_kind: build
+        tags: [crossplane, composition, xrd, claim, function-patch-and-transform, provider-kubernetes]
+        learning_goals:
+          - Write a Composition that creates a namespace and a Deployment from a claim
+          - Patch the claim name and replica count into the composed Objects and set a readiness policy
+          - Report the created namespace in the status of the claim
+        resources:
+          - name: "Crossplane compositions"
+            url: https://docs.crossplane.io/latest/composition/compositions/
+          - name: "Function patch and transform"
+            url: https://github.com/crossplane-contrib/function-patch-and-transform
+      - type: reading
+        title: "Summary"
+        path: sections/section-030/module-01/course-04-summary.md
+
+      - type: reading
+        title: "Providers, Identities, Connection Secrets And Deletion"
+        path: sections/section-030/module-02/course.md
+      - type: reading
+        title: "Providers, ProviderConfigs And Identity"
+        path: sections/section-030/module-02/course-01-providers-providerconfigs-and-identity.md
+      - type: reading
+        title: "Connection Secrets, Conditions And Partial Failure"
+        path: sections/section-030/module-02/course-02-connection-secrets-conditions-and-partial-failure.md
+      - type: reading
+        title: "Management Policies And Deletion"
+        path: sections/section-030/module-02/course-03-management-policies-and-deletion.md
+      - type: reading
+        title: "Question"
+        path: sections/section-030/module-02/labs/lab-01/question.md
+      - type: lab
+        title: "Identity, Connection Secret And Deletion Lab"
+        path: sections/section-030/module-02/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 35m
+        topic: crossplane
+        task_kind: build
+        tags: [crossplane, provider-kubernetes, providerconfig, rbac, connection-secret, deletion-policy, orphan]
+        learning_goals:
+          - Grant the provider identity access to Deployments with a least-privilege ClusterRole
+          - Publish a connection secret for a claim and read its value
+          - Set an orphan deletion policy so the record survives a deleted claim
+        resources:
+          - name: "Crossplane providers"
+            url: https://docs.crossplane.io/latest/packages/providers/
+          - name: "Provider Kubernetes"
+            url: https://github.com/crossplane-contrib/provider-kubernetes
+      - type: reading
+        title: "Summary"
+        path: sections/section-030/module-02/course-04-summary.md
+
+      - type: reading
+        title: "Question"
+        path: sections/section-030/capstone/labs/lab-01/question.md
+      - type: lab
+        title: "Infrastructure Provisioning Capstone"
+        path: sections/section-030/capstone/labs/lab-01
+        difficulty: advanced
+        estimated_duration: 50m
+        topic: crossplane
+        task_kind: build
+        tags: [crossplane, xrd, composition, claim, connection-secret, deletion-policy, schema-validation]
+        learning_goals:
+          - Write an XRD with claim names, a bounded schema and a connection secret key
+          - Write a Composition with a namespace, a Deployment and an orphaned record
+          - Create claims, read the connection secret and delete a claim while the record stays
+        resources:
+          - name: "Crossplane composite resource definitions"
+            url: https://docs.crossplane.io/latest/composition/composite-resource-definitions/
+          - name: "Crossplane claims"
+            url: https://docs.crossplane.io/latest/composition/claims/
+      - type: quiz
+        title: "Knowledge Check: Infrastructure Provisioning with Kubernetes"
+        path: sections/section-030/quiz.yaml
+        pass_score: 70
+  - id: module-040
+    title: "Kubernetes Operator Pattern for Integration"
+    description: >
+      Makes the reader able to build and operate Kubernetes operators:
+      a CRD plus a reconcile loop with least-privilege RBAC, idempotent
+      actions, status, owner references and finalizers, and the install,
+      certificate issuing, upgrade rules, blast radius and outage
+      behavior of a real operator, cert-manager.
+
+    content:
+      - type: reading
+        title: "Section Overview"
+        path: sections/section-040/README.md
+
+      - type: reading
+        title: "The Operator Pattern: CRD Plus Controller"
+        path: sections/section-040/module-01/course.md
+      - type: reading
+        title: "A CRD Without A Controller"
+        path: sections/section-040/module-01/course-01-crd-without-a-controller.md
+      - type: reading
+        title: "A Reconcile Loop In A Deployment"
+        path: sections/section-040/module-01/course-02-reconcile-loop-in-a-deployment.md
+      - type: reading
+        title: "Finalizers And Owner References"
+        path: sections/section-040/module-01/course-03-finalizers-and-owner-references.md
+      - type: reading
+        title: "Question"
+        path: sections/section-040/module-01/labs/lab-01/question.md
+      - type: lab
+        title: "Build A Beacon Operator Lab"
+        path: sections/section-040/module-01/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 40m
+        topic: operators
+        task_kind: build
+        tags: [operator, crd, controller, reconcile, rbac, finalizer, ownerreferences]
+        learning_goals:
+          - Run a reconcile loop as a Deployment whose script lives in a ConfigMap
+          - Create child objects with owner references and keep status in step with the spec
+          - Clean up a registry entry in another namespace with a finalizer and grant only the permissions the controller needs
+        resources:
+          - name: "Operator pattern"
+            url: https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
+          - name: "Custom Resources"
+            url: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
+      - type: reading
+        title: "Summary"
+        path: sections/section-040/module-01/course-04-summary.md
+
+      - type: reading
+        title: "Operating A Real Operator: cert-manager"
+        path: sections/section-040/module-02/course.md
+      - type: reading
+        title: "What The Install Contains"
+        path: sections/section-040/module-02/course-01-what-the-install-contains.md
+      - type: reading
+        title: "From Issuer To Secret"
+        path: sections/section-040/module-02/course-02-from-issuer-to-secret.md
+      - type: reading
+        title: "Question"
+        path: sections/section-040/module-02/labs/lab-01/question.md
+      - type: lab
+        title: "Issue Certificates With cert-manager Lab"
+        path: sections/section-040/module-02/labs/lab-01
+        difficulty: intermediate
+        estimated_duration: 30m
+        topic: operators
+        task_kind: build
+        tags: [cert-manager, issuer, certificate, secret, conditions, events]
+        learning_goals:
+          - Create a selfSigned Issuer and a Certificate that writes a TLS Secret with a set duration and renewal window
+          - Read the Ready condition and events to find why a Certificate waits
+          - Fix a waiting Certificate with a namespaced Issuer and no change to cert-manager
+        resources:
+          - name: "cert-manager documentation"
+            url: https://cert-manager.io/docs/
+          - name: "SelfSigned issuer"
+            url: https://cert-manager.io/docs/configuration/selfsigned/
+      - type: reading
+        title: "Upgrades And Blast Radius"
+        path: sections/section-040/module-02/course-03-upgrades-and-blast-radius.md
+      - type: reading
+        title: "Leader Election And When The Operator Is Down"
+        path: sections/section-040/module-02/course-04-leader-election-and-operator-down.md
+      - type: reading
+        title: "Summary"
+        path: sections/section-040/module-02/course-05-summary.md
+
+      - type: reading
+        title: "Question"
+        path: sections/section-040/capstone/labs/lab-01/question.md
+      - type: lab
+        title: "Operator Integration Capstone"
+        path: sections/section-040/capstone/labs/lab-01
+        difficulty: advanced
+        estimated_duration: 45m
+        topic: operators
+        task_kind: fix
+        tags: [cert-manager, clusterissuer, certificate, rbac, cluster-admin, leader-election, deployment]
+        learning_goals:
+          - Restore a stopped controller and confirm it holds its lease
+          - Create the ClusterIssuer a Certificate needs and issue both DNS names
+          - Fix the Secret name in a Deployment and remove a cluster-admin binding
+        resources:
+          - name: "ClusterIssuer and Issuer"
+            url: https://cert-manager.io/docs/concepts/issuer/
+          - name: "Using RBAC authorization"
+            url: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+      - type: quiz
+        title: "Knowledge Check: Kubernetes Operator Pattern for Integration"
+        path: sections/section-040/quiz.yaml
+        pass_score: 70
+      - type: quiz
+        title: "Final Knowledge Check: Platform APIs and Provisioning Infrastructure"
+        path: sections/final-domain-quiz.yaml
+        pass_score: 70

@@ -1,0 +1,167 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: depot-kubernetes
+spec:
+  compositeTypeRef:
+    apiVersion: platform.starfleet.example/v1alpha1
+    kind: XDepot
+  writeConnectionSecretsToNamespace: crossplane-system
+  mode: Pipeline
+  pipeline:
+  - step: compose-outpost
+    functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      resources:
+      - name: namespace
+        base:
+          apiVersion: kubernetes.crossplane.io/v1alpha2
+          kind: Object
+          spec:
+            providerConfigRef:
+              name: local-cluster
+            forProvider:
+              manifest:
+                apiVersion: v1
+                kind: Namespace
+                metadata:
+                  name: placeholder
+        patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          policy:
+            fromFieldPath: Required
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: depot-%s
+        - type: ToCompositeFieldPath
+          fromFieldPath: spec.forProvider.manifest.metadata.name
+          toFieldPath: status.namespace
+      - name: deployment
+        base:
+          apiVersion: kubernetes.crossplane.io/v1alpha2
+          kind: Object
+          spec:
+            providerConfigRef:
+              name: local-cluster
+            readiness:
+              policy: AllTrue
+            forProvider:
+              manifest:
+                apiVersion: apps/v1
+                kind: Deployment
+                metadata:
+                  name: scout
+                  namespace: placeholder
+                spec:
+                  replicas: 1
+                  selector:
+                    matchLabels:
+                      app: scout
+                  template:
+                    metadata:
+                      labels:
+                        app: scout
+                    spec:
+                      containers:
+                      - name: scout
+                        image: ghcr.io/stefanprodan/podinfo:6.15.0
+                        ports:
+                        - containerPort: 9898
+        patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+          policy:
+            fromFieldPath: Required
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: depot-%s
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.replicas
+          toFieldPath: spec.forProvider.manifest.spec.replicas
+      - name: record
+        base:
+          apiVersion: kubernetes.crossplane.io/v1alpha2
+          kind: Object
+          spec:
+            providerConfigRef:
+              name: local-cluster
+            forProvider:
+              manifest:
+                apiVersion: v1
+                kind: ConfigMap
+                metadata:
+                  name: placeholder
+                  namespace: starfleet-records
+                data:
+                  claim: placeholder
+                  endpoint: placeholder
+            connectionDetails:
+            - apiVersion: v1
+              kind: ConfigMap
+              name: placeholder
+              namespace: starfleet-records
+              fieldPath: data.endpoint
+              toConnectionSecretKey: endpoint
+            writeConnectionSecretToRef:
+              name: placeholder
+              namespace: crossplane-system
+            deletionPolicy: Orphan
+        patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          policy:
+            fromFieldPath: Required
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: record-%s
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.connectionDetails[0].name
+          policy:
+            fromFieldPath: Required
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: record-%s
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.data.claim
+          policy:
+            fromFieldPath: Required
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
+          toFieldPath: spec.forProvider.manifest.data.endpoint
+          policy:
+            fromFieldPath: Required
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: scout.depot-%s.svc.cluster.local:9898
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.uid
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "%s-record"
+        connectionDetails:
+        - name: endpoint
+          type: FromConnectionSecretKey
+          fromConnectionSecretKey: endpoint

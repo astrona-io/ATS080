@@ -1,0 +1,9 @@
+# An existing claim, created through the older version.
+apiVersion: platform.example/v1alpha1
+kind: DatabaseClaim
+metadata:
+  name: scout-db
+  namespace: starfleet
+spec:
+  engine: postgres
+  storageGB: 20

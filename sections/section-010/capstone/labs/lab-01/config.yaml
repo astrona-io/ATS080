@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Kubernetes Reconciliation Loop Capstone (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-capstone-010
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - ghcr.io/stefanprodan/podinfo:6.15.0
+      - mccutchen/go-httpbin:2.25.0
+      - curlimages/curl:8.22.0
+
+# Starting state: `scout` is stuck on an image tag that does not exist,
+# `probe` is stuck on a readiness probe that fails, and the ConfigMap
+# `decommissioned-beacon` is terminating because of a finalizer.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Create the workloads, break scout and probe, hold a ConfigMap with a finalizer, and record the uids
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: scout-converged
+      description: scout runs the working image and the Deployment has converged
+      type: file
+      source: validation/validate-scout-converged.sh
+      hint: Read the pod status and events of the new scout pod. Set the image back to ghcr.io/stefanprodan/podinfo:6.15.0 and wait for the rollout to complete.
+    - name: probe-converged
+      description: probe pods are ready through the working readiness probe and the Deployment has converged
+      type: file
+      source: validation/validate-probe-converged.sh
+      hint: The new probe pods run but are not ready. Read the Unhealthy event, then fix the readiness probe path (go-httpbin answers on /get). Do not remove the probe.
+    - name: beacon-released
+      description: decommissioned-beacon is gone and active-beacon was not touched
+      type: file
+      source: validation/validate-beacon-released.sh
+      hint: The ConfigMap has a deletionTimestamp and a finalizer. Remove only that finalizer with a merge patch. Do not delete active-beacon.
+    - name: release-note-owned
+      description: release-note is owned by the scout Deployment and records its revision and image
+      type: file
+      source: validation/validate-release-note.sh
+      hint: Use an ownerReferences entry with apiVersion apps/v1, kind Deployment, name scout and the live uid. Read the revision from the annotation deployment.kubernetes.io/revision after the fix.
+    - name: deployments-not-recreated
+      description: No Deployment was deleted and created again, and shuttle still gets answers from scout and probe
+      type: file
+      source: validation/validate-not-recreated.sh
+      hint: Fix the Deployments in place. A deleted and re-created Deployment has a new uid.
+
+teardown:
+  keepCluster: false

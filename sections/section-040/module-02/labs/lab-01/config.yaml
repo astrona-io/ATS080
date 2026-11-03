@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Issue Certificates With cert-manager (LAB). Graded against the live cluster.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-lab-040-02
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+
+
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: "Install cert-manager v1.21.3 and create a Certificate that waits for a missing Issuer"
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference solution
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: scout-certificate-ready
+      description: Certificate scout-cert in starfleet is Ready, uses an Issuer in starfleet and lists both DNS names
+      type: file
+      source: validation/validate-scout-certificate-ready.sh
+      hint: Create a selfSigned Issuer named starfleet-selfsigned in starfleet. In the Certificate, set issuerRef name, kind Issuer and both dnsNames.
+    - name: scout-secret-issued
+      description: Secret scout-tls is of type kubernetes.io/tls and holds tls.crt and tls.key
+      type: file
+      source: validation/validate-scout-secret-issued.sh
+      hint: The Secret is written by cert-manager, not by you. Check spec.secretName and look at the events of the Certificate.
+    - name: scout-lifetime
+      description: The issued certificate is valid for 48 hours and renews 12 hours before it expires
+      type: file
+      source: validation/validate-scout-lifetime.sh
+      hint: Set spec.duration to 48h and spec.renewBefore to 12h. A change of the spec makes cert-manager issue the certificate again.
+    - name: drifter-certificate-ready
+      description: The existing Certificate drifter-cert in outpost becomes Ready without a change to its issuerRef
+      type: file
+      source: validation/validate-drifter-certificate-ready.sh
+      hint: Read the Ready condition message of drifter-cert. An Issuer is namespaced, so the Issuer outpost-issuer must exist in outpost.
+    - name: scoped-issuers-only
+      description: No ClusterIssuer exists and cert-manager itself was not changed
+      type: file
+      source: validation/validate-scoped-issuers-only.sh
+      hint: Use namespaced Issuer resources. Do not scale, edit or delete anything in the namespace cert-manager.
+
+teardown:
+  keepCluster: false

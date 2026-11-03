@@ -1,0 +1,11 @@
+# Namespaces for the cert-manager playground. Pods and certificates for the
+# exercises go here; no workload runs yet.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost

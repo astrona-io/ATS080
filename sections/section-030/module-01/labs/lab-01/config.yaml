@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Claims, XRDs And Compositions (LAB). Graded against the live cluster. Built untested.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-080-lab-030-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+      - ghcr.io/stefanprodan/podinfo:6.15.0
+      - curlimages/curl:8.22.0
+
+# Starting state: Crossplane, provider-kubernetes, function-patch-and-transform and
+# the XRD for XOutpost and the Outpost claim. The XRD points at a Composition
+# named outpost-kubernetes that does not exist yet.
+bootstrap:
+  init:
+    - name: seed-cluster
+      description: Install Crossplane, the provider, the function and the XRD
+      type: file
+      source: bootstrap/01-seed-cluster.sh
+
+# Applied only by `astrona test`: the reference solution.
+testing:
+  init:
+    - name: apply-solution
+      description: Apply the reference Composition and the claim
+      type: file
+      source: solution/apply.sh
+
+validation:
+  scripts:
+    - name: composition-pipeline
+      description: The Composition outpost-kubernetes is a pipeline that calls function-patch-and-transform for XOutpost
+      type: file
+      source: validation/validate-composition-pipeline.sh
+      hint: Set compositeTypeRef to platform.starfleet.example/v1alpha1 XOutpost, mode Pipeline, and a pipeline step whose functionRef name is function-patch-and-transform.
+    - name: claim-ready
+      description: The claim scout in starfleet is Synced and Ready
+      type: file
+      source: validation/validate-claim-ready.sh
+      hint: Create the Outpost claim named scout in the namespace starfleet with replicas 2, then read its conditions with kubectl get outpost scout -n starfleet -o yaml. A Ready condition of False names the composed resource that is not ready yet.
+    - name: namespace-and-deployment
+      description: Namespace outpost-scout exists and the Deployment scout there has 2 available replicas
+      type: file
+      source: validation/validate-namespace-and-deployment.sh
+      hint: Patch the namespace name from the claim-name label with the format outpost-%s, patch the Deployment namespace the same way, and patch spec.replicas from the composite spec.replicas.
+    - name: composed-objects
+      description: The composite resource owns at least two Objects and every one is Synced
+      type: file
+      source: validation/validate-composed-objects.sh
+      hint: List them with kubectl get objects.kubernetes.crossplane.io. An Object that is not Synced shows the error in its conditions.
+    - name: status-namespace
+      description: The composite resource status.namespace is outpost-scout
+      type: file
+      source: validation/validate-status-namespace.sh
+      hint: Add a ToCompositeFieldPath patch on the namespace resource that copies spec.forProvider.manifest.metadata.name to status.namespace.
+
+teardown:
+  keepCluster: false
