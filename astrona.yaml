@@ -67,7 +67,7 @@ modules:
         difficulty: intermediate
         estimated_duration: 20m
         topic: kubernetes-controllers
-        task_kind: fix
+        task_kind: build
         tags: [reconciliation, deployment, replicaset, ownerreferences, observedgeneration, garbage-collection]
         learning_goals:
           - Scale a Deployment and let the controller create the missing pods
@@ -103,7 +103,7 @@ modules:
         difficulty: intermediate
         estimated_duration: 30m
         topic: kubernetes-controllers
-        task_kind: fix
+        task_kind: troubleshooting
         tags: [reconciliation, progressdeadlineseconds, conditions, events, imagepullbackoff, unschedulable]
         learning_goals:
           - Record why two Deployments report Progressing false from their conditions, pods and events
@@ -130,7 +130,7 @@ modules:
         difficulty: advanced
         estimated_duration: 40m
         topic: kubernetes-controllers
-        task_kind: fix
+        task_kind: troubleshooting
         tags: [reconciliation, deployment, finalizer, ownerreferences, readiness-probe, imagepullbackoff, conditions]
         learning_goals:
           - Unblock a rollout with a bad image and a rollout with a failing readiness probe
@@ -223,7 +223,7 @@ modules:
         difficulty: intermediate
         estimated_duration: 35m
         topic: platform-apis
-        task_kind: fix
+        task_kind: build
         tags: [crd, versions, deprecation, status-conditions, rbac, auth-can-i]
         learning_goals:
           - Make v1beta1 the only storage version and deprecate v1alpha1 with a warning
@@ -472,7 +472,7 @@ modules:
         difficulty: advanced
         estimated_duration: 45m
         topic: operators
-        task_kind: fix
+        task_kind: troubleshooting
         tags: [cert-manager, clusterissuer, certificate, rbac, cluster-admin, leader-election, deployment]
         learning_goals:
           - Restore a stopped controller and confirm it holds its lease
